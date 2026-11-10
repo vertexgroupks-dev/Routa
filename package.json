@@ -1,0 +1,20 @@
+{
+  "name": "routa",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:web": "npm run dev --workspace @routa/web",
+    "dev:driver": "npm run start --workspace @routa/driver",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.4",
+    "typescript": "~5.8.3"
+  },
+  "packageManager": "npm@10.9.2",
+  "engines": { "node": ">=20" }
+}

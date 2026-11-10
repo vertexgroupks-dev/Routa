@@ -1,0 +1,54 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: var(--font-geist), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --color-brand: #5B5CF6;
+  --color-brand-hover: #4A49E3;
+  --color-brand-deep: #3B38BF;
+  --color-brand-tint: #EEF0FF;
+  --color-brand-soft: #DFE2FF;
+  --color-night: #0B0F1E;
+  --color-night-2: #141A2E;
+  --color-night-3: #1C2340;
+  --color-night-line: #232A42;
+  --color-lime: #C8F25A;
+  --color-ink: #0E1325;
+  --color-ink-2: #5B6378;
+  --color-ink-3: #6B7389;
+  --color-muted: #9AA3BC;
+  --color-line: #E4E7EF;
+  --color-canvas: #F5F6FA;
+  --color-field: #F0F2F7;
+  --color-success: #0F9F5F;
+  --color-success-ink: #067647;
+  --color-success-tint: #E8F8EF;
+  --color-warning: #D9740B;
+  --color-warning-ink: #B54708;
+  --color-warning-tint: #FFF4E5;
+  --color-danger: #D92D2D;
+  --color-danger-ink: #B42318;
+  --color-danger-tint: #FDECEC;
+  --color-info: #1D72D8;
+  --color-info-ink: #175CD3;
+  --color-info-tint: #E9F3FF;
+}
+
+html, body { background: #FFFFFF; color: var(--color-ink); }
+body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; }
+.link { color: var(--color-brand-hover); font-weight: 500; }
+.link:hover { color: var(--color-brand-deep); }
+
+@layer components {
+  .card { @apply rounded-[14px] border border-line bg-white; }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-[10px] px-3.5 py-[9px] text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60; }
+  .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-[10px] px-3.5 py-[9px] text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 bg-brand text-white hover:bg-brand-hover; }
+  .btn-dark { @apply inline-flex items-center justify-center gap-2 rounded-[10px] px-3.5 py-[9px] text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 bg-night text-white hover:bg-night-3; }
+  .btn-ghost { @apply inline-flex items-center justify-center gap-2 rounded-[10px] px-3.5 py-[9px] text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 border border-line bg-white text-ink hover:bg-canvas; }
+  .input { @apply w-full rounded-[10px] border border-line bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-brand focus:ring-1 focus:ring-brand; }
+  .label { @apply flex flex-col gap-1.5 text-[13px] font-medium; }
+  .th { @apply px-2 py-2.5 text-left text-xs font-medium text-ink-3; }
+  .td { @apply px-2 py-3 align-middle; }
+}

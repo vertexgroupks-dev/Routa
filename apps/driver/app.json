@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "Routa Driver",
+    "slug": "routa-driver",
+    "scheme": "routa-driver",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": { "bundleIdentifier": "app.routa.driver", "supportsTablet": false },
+    "android": { "package": "app.routa.driver", "edgeToEdgeEnabled": true },
+    "plugins": [
+      "expo-router",
+      ["expo-location", { "locationWhenInUsePermission": "Routa uses your location to confirm deliveries and show your position to the office." }]
+    ],
+    "experiments": { "typedRoutes": false }
+  }
+}
