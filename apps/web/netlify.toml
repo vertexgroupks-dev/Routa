@@ -1,6 +1,12 @@
-# Netlify settings for the web app (Site settings → Build: Package directory = apps/web).
-# These two values are public (they ship to the browser anyway); secrets never go here.
+# Netlify builds ONLY the website (apps/web). The driver app (apps/driver) is a phone app and is not deployed here.
+[build]
+  base = "apps/web"
+  command = "npm run build"
+  publish = ".next"
+
 [build.environment]
   NODE_VERSION = "22"
+  NPM_FLAGS = "--include=dev"
+  # Public values (they are sent to the browser anyway). Never put secrets here.
   NEXT_PUBLIC_SUPABASE_URL = "https://pfdidtlgmdtthobjuozk.supabase.co"
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_i_y7TsgGhEJcTtOZVV4ggA_KsK18skN"
