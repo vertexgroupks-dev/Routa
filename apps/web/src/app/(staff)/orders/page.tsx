@@ -20,8 +20,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
     .from('orders')
     .select('id, code, status, customer_name, customer_phone, address_line, city, delivery_date, cod_amount, delivery_fee, needs_pin, attempts, merchant:merchants(name, code), zone:zones(name, color)', { count: 'exact' })
     .eq('org_id', ws.org.id)
-    .order('delivery_date', { ascending: false })
-    .order('code', { ascending: false })
+    .order('created_at', { ascending: false })
     .range((page - 1) * PAGE, page * PAGE - 1);
   if (tab.statuses) query = query.in('status', tab.statuses);
   if (sp.date) query = query.eq('delivery_date', sp.date);

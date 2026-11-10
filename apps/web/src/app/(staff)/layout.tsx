@@ -1,3 +1,4 @@
+import { LiveRefresh } from '@/components/LiveRefresh';
 import { requireStaff } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/Sidebar';
@@ -29,6 +30,7 @@ export default async function StaffLayout({ children }: { children: React.ReactN
         counts={{ orders: orders.count ?? 0, inbound: inbound.count ?? 0, returns: returns.count ?? 0, tickets: tickets.count ?? 0, cash: cash.count ?? 0 }}
       />
       <div className="flex min-w-0 flex-1 flex-col">
+        <LiveRefresh />
         <Topbar liveDrivers={live.count ?? 0} />
         <main className="flex flex-col gap-5 p-7">{children}</main>
       </div>

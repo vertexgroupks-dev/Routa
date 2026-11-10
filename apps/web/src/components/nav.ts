@@ -10,26 +10,26 @@ export const NAV: { label: string; items: NavItem[] }[] = [
     { label: 'Fleet & Drivers', href: '/fleet', icon: 'truck' }
   ] },
   { label: 'WAREHOUSE', items: [
-    { label: 'Inventory', href: '/inventory', icon: 'warehouse', stage: 'Stage 7 · Warehouse' },
-    { label: 'Inbound', href: '/inbound', icon: 'download', countKey: 'inbound', stage: 'Stage 7 · Warehouse' },
-    { label: 'Pick & Pack', href: '/pick-pack', icon: 'scan', stage: 'Stage 7 · Warehouse' },
-    { label: 'Returns', href: '/returns', icon: 'undo', countKey: 'returns', stage: 'Stage 7 · Warehouse' }
+    { label: 'Inventory', href: '/inventory', icon: 'warehouse' },
+    { label: 'Inbound', href: '/inbound', icon: 'download', countKey: 'inbound' },
+    { label: 'Pick & Pack', href: '/pick-pack', icon: 'scan' },
+    { label: 'Returns', href: '/returns', icon: 'undo', countKey: 'returns' }
   ] },
   { label: 'SUPPORT', items: [
     { label: 'Helpdesk', href: '/helpdesk', icon: 'headset', countKey: 'tickets' },
-    { label: 'Proof of Delivery', href: '/pod', icon: 'camera', stage: 'Stage 6 · Live ops' }
+    { label: 'Proof of Delivery', href: '/pod', icon: 'camera' }
   ] },
   { label: 'BUSINESS', items: [
     { label: 'Finance & COD', href: '/finance', icon: 'wallet' },
-    { label: 'Cash Check-in', href: '/cash-check-in', icon: 'banknote', countKey: 'cash', stage: 'Stage 7 · Money' },
+    { label: 'Cash Check-in', href: '/cash-check-in', icon: 'banknote', countKey: 'cash' },
     { label: 'Merchants', href: '/merchants', icon: 'store' },
-    { label: 'HR & Payroll', href: '/hr', icon: 'users', stage: 'Stage 8 · People' },
-    { label: 'Analytics', href: '/analytics', icon: 'chart', stage: 'Stage 8 · Reports' }
+    { label: 'HR & Payroll', href: '/hr', icon: 'users' },
+    { label: 'Analytics', href: '/analytics', icon: 'chart' }
   ] }
 ];
 export const NAV_FOOTER: NavItem[] = [
-  { label: 'Team & roles', href: '/team', icon: 'team', stage: 'Stage 2 · Team' },
-  { label: 'Settings', href: '/settings', icon: 'settings', stage: 'Stage 8 · Settings' }
+  { label: 'Team & roles', href: '/team', icon: 'team' },
+  { label: 'Settings', href: '/settings', icon: 'settings' }
 ];
 
 export function findNav(path: string): { section: string; item: NavItem } | null {
