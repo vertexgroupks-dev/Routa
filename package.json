@@ -3,16 +3,17 @@
   "private": true,
   "version": "0.1.0",
   "workspaces": [
-    "apps/*",
+    "apps/web",
     "packages/*"
   ],
   "scripts": {
     "dev": "turbo run dev",
     "dev:web": "npm run dev --workspace @routa/web",
-    "dev:driver": "npm run start --workspace @routa/driver",
-    "build": "turbo run build",
+    "dev:driver": "npm --prefix apps/driver start",
+    "build": "npm run build --workspace @routa/web",
     "typecheck": "turbo run typecheck",
-    "lint": "turbo run lint"
+    "lint": "turbo run lint",
+    "install:driver": "npm --prefix apps/driver install"
   },
   "devDependencies": {
     "turbo": "^2.5.4",

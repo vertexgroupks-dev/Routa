@@ -33,6 +33,7 @@ The `.env.local` (web) and `.env` (driver) files are already filled in with the 
 ### Driver app
 ```bash
 cd apps/driver
+npm install                      # the driver app has its own packages (separate from the website)
 npx expo install expo@latest     # match the Expo Go version on your phone
 npx expo install --fix           # align the other Expo packages
 npm run start                    # scan the QR with Expo Go (Android) or the Camera app (iPhone)
