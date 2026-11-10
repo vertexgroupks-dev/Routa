@@ -1,0 +1,6 @@
+# Netlify settings for the web app (Site settings → Build: Package directory = apps/web).
+# These two values are public (they ship to the browser anyway); secrets never go here.
+[build.environment]
+  NODE_VERSION = "22"
+  NEXT_PUBLIC_SUPABASE_URL = "https://pfdidtlgmdtthobjuozk.supabase.co"
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_i_y7TsgGhEJcTtOZVV4ggA_KsK18skN"
