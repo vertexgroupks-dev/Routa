@@ -52,11 +52,27 @@ function LoginForm() {
       <button disabled={busy} className="btn-primary py-3">{busy ? 'Signing in…' : 'Sign in'}</button>
       <p className="text-center text-[13px] text-ink-2">New to Routa? <Link href="/register" className="link">Create a company account</Link></p>
       <p className="text-center text-[13px] text-ink-2">Sending parcels with a courier? Merchants sign in here too and land in their merchant portal.</p>
+      <DemoAccounts onPick={(e) => { setEmail(e); setPassword('Routa2026!'); }} />
       <div className="flex items-center gap-2.5 rounded-[10px] bg-canvas p-3 text-xs leading-4 text-ink-2">
         <Icon name="truck" color="#5B6378" className="flex-none" />
         Are you a driver? Open the Routa Driver app on your phone and sign in with your phone number.
       </div>
     </form>
+  );
+}
+
+// Demo shortcuts — remove before a real customer uses Routa.
+const DEMO = [['owner', 'Owner'], ['dispatcher', 'Dispatcher'], ['frontdesk', 'Front desk'], ['finance', 'Finance'], ['helpdesk', 'Helpdesk'], ['warehouse', 'Warehouse'], ['merchant', 'Merchant']];
+function DemoAccounts({ onPick }: { onPick: (email: string) => void }) {
+  return (
+    <div className="flex flex-col gap-2 rounded-[10px] border border-dashed border-brand bg-brand-tint p-3">
+      <span className="text-xs font-medium text-brand-deep">Demo accounts · password Routa2026!</span>
+      <div className="flex flex-wrap gap-1.5">
+        {DEMO.map(([u, l]) => (
+          <button key={u} type="button" onClick={() => onPick(`${u}@routa.demo`)} className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-brand-deep hover:bg-brand-soft">{l}</button>
+        ))}
+      </div>
+    </div>
   );
 }
 

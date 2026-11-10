@@ -4,6 +4,14 @@ import { NextResponse, type NextRequest } from 'next/server';
 const PUBLIC = ['/', '/login', '/register', '/auth', '/t'];
 
 export async function updateSession(request: NextRequest) {
+  // Email confirmation / magic links can land on any page with ?code=… — send them to the callback.
+  const code = request.nextUrl.searchParams.get('code');
+  if (code && !request.nextUrl.pathname.startsWith('/auth/')) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/auth/callback';
+    url.search = `?code=${encodeURIComponent(code)}&next=/onboarding`;
+    return NextResponse.redirect(url);
+  }
   let response = NextResponse.next({ request });
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
