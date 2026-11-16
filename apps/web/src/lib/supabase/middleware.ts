@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-const PUBLIC = ['/', '/login', '/register', '/auth', '/t'];
+const PUBLIC = ['/', '/login', '/register', '/auth', '/t', '/invite', '/forgot'];
 
 export async function updateSession(request: NextRequest) {
   // Email confirmation / magic links can land on any page with ?code=… — send them to the callback.
@@ -9,7 +9,8 @@ export async function updateSession(request: NextRequest) {
   if (code && !request.nextUrl.pathname.startsWith('/auth/')) {
     const url = request.nextUrl.clone();
     url.pathname = '/auth/callback';
-    url.search = `?code=${encodeURIComponent(code)}&next=/onboarding`;
+    const back = request.nextUrl.pathname === '/' ? '/onboarding' : request.nextUrl.pathname;
+    url.search = `?code=${encodeURIComponent(code)}&next=${encodeURIComponent(back)}`;
     return NextResponse.redirect(url);
   }
   let response = NextResponse.next({ request });

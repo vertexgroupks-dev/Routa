@@ -11,13 +11,14 @@ export default async function StaffLayout({ children }: { children: React.ReactN
   const org = ws.org.id;
   const today = todayKs();
   const head = { count: 'exact' as const, head: true };
-  const [orders, inbound, returns, tickets, cash, live] = await Promise.all([
+  const [orders, inbound, returns, tickets, cash, live, unread] = await Promise.all([
     supabase.from('orders').select('id', head).eq('org_id', org).eq('delivery_date', today),
     supabase.from('inbound_shipments').select('id', head).eq('org_id', org).in('status', ['expected', 'in_transit', 'receiving']),
     supabase.from('returns').select('id', head).eq('org_id', org).eq('status', 'expected'),
     supabase.from('tickets').select('id', head).eq('org_id', org).neq('status', 'resolved'),
     supabase.from('cash_handovers').select('id', head).eq('org_id', org).eq('status', 'pending'),
-    supabase.from('driver_positions').select('driver_id', head).eq('org_id', org).gte('recorded_at', new Date(Date.now() - 15 * 60_000).toISOString())
+    supabase.from('driver_positions').select('driver_id', head).eq('org_id', org).gte('recorded_at', new Date(Date.now() - 15 * 60_000).toISOString()),
+    supabase.from('notifications').select('id', head).eq('user_id', ws.userId).is('read_at', null)
   ]);
   return (
     <div className="flex min-h-screen bg-canvas">
@@ -31,7 +32,7 @@ export default async function StaffLayout({ children }: { children: React.ReactN
       />
       <div className="flex min-w-0 flex-1 flex-col">
         <LiveRefresh />
-        <Topbar liveDrivers={live.count ?? 0} />
+        <Topbar liveDrivers={live.count ?? 0} unread={unread.count ?? 0} />
         <main className="flex flex-col gap-5 p-7">{children}</main>
       </div>
     </div>

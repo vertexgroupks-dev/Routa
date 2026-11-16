@@ -10,7 +10,8 @@ const ITEMS: { label: string; href: string; icon: IconName }[] = [
   { label: 'Orders', href: '/merchant/orders', icon: 'package' },
   { label: 'Import CSV', href: '/merchant/import', icon: 'upload' },
   { label: 'Stock', href: '/merchant/stock', icon: 'warehouse' },
-  { label: 'Payouts', href: '/merchant/payouts', icon: 'wallet' }
+  { label: 'Payouts', href: '/merchant/payouts', icon: 'wallet' },
+  { label: 'API & webhooks', href: '/merchant/developers', icon: 'settings' }
 ];
 
 export function MerchantNav({ merchantName, code, userName }: { merchantName: string; code: string; userName: string }) {

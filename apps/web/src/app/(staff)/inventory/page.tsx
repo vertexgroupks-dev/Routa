@@ -1,6 +1,7 @@
 import { requireStaff } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, Pill, Empty, StatCard } from "@/components/ui";
+import { AdjustStock } from "../inbound/ReceiveLine";
 export const metadata = { title: 'Inventory' };
 export default async function Page() {
   const ws = await requireStaff(); const sb = await createClient();
@@ -15,10 +16,10 @@ export default async function Page() {
       <StatCard label="Low stock" value={String(low.length)} icon="alert" tint="#FFF4E5" ink="#B54708" />
     </section>
     <section className="card overflow-x-auto"><table className="w-full min-w-[760px] border-collapse text-[13px]">
-      <thead className="bg-[#FAFBFD]"><tr><th className="th pl-5">SKU</th><th className="th">Product</th><th className="th">Merchant</th><th className="th">Bin</th><th className="th text-right">On hand</th><th className="th text-right">Reserved</th><th className="th text-right">Available</th><th className="th pr-5">Status</th></tr></thead>
+      <thead className="bg-[#FAFBFD]"><tr><th className="th pl-5">SKU</th><th className="th">Product</th><th className="th">Merchant</th><th className="th">Bin</th><th className="th text-right">On hand</th><th className="th text-right">Reserved</th><th className="th text-right">Available</th><th className="th">Status</th><th className="th pr-5"></th></tr></thead>
       <tbody>{rows.sort((a, b) => (a.on_hand - a.reserved) - (b.on_hand - b.reserved)).map((r) => { const av = r.on_hand - r.reserved; return (
         <tr key={r.id} className="border-t border-line"><td className="td pl-5 font-mono">{r.sku?.sku}</td><td className="td font-medium">{r.sku?.name}</td><td className="td text-ink-2">{r.sku?.merchant?.name}</td><td className="td font-mono text-ink-2">{r.bin?.code}</td><td className="td text-right font-mono">{r.on_hand}</td><td className="td text-right font-mono">{r.reserved}</td><td className="td text-right font-mono font-semibold">{av}</td>
-        <td className="td pr-5">{av <= 0 ? <Pill bg="#FDECEC" ink="#B42318">Out of stock</Pill> : av <= (r.sku?.low_stock_threshold ?? 5) ? <Pill bg="#FFF4E5" ink="#B54708">Low</Pill> : <Pill bg="#E8F8EF" ink="#067647">OK</Pill>}</td></tr>); })}</tbody></table>
+        <td className="td pr-5">{av <= 0 ? <Pill bg="#FDECEC" ink="#B42318">Out of stock</Pill> : av <= (r.sku?.low_stock_threshold ?? 5) ? <Pill bg="#FFF4E5" ink="#B54708">Low</Pill> : <Pill bg="#E8F8EF" ink="#067647">OK</Pill>}</td><td className="td pr-5 text-right"><AdjustStock id={r.id} /></td></tr>); })}</tbody></table>
       {rows.length === 0 && <Empty title="No stock yet" />}</section>
   </>);
 }

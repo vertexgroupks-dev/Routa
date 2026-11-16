@@ -2,6 +2,8 @@ import { requireStaff } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, StatCard, Pill, Empty } from '@/components/ui';
 import { euro, todayKs } from '@routa/shared';
+import Link from 'next/link';
+import { MoneyRuns, MarkPaid } from './FinanceActions';
 
 export const metadata = { title: 'Finance & COD' };
 const PS: Record<string, [string, string]> = { draft: ['#F0F2F7', '#5B6378'], scheduled: ['#EEF0FF', '#3B38BF'], paid: ['#E8F8EF', '#067647'], on_hold: ['#FFF4E5', '#B54708'], issued: ['#EEF0FF', '#3B38BF'], void: ['#FDECEC', '#B42318'] };
@@ -14,7 +16,7 @@ export default async function FinancePage() {
   const [{ data: cod }, { data: ledger }, { data: payouts }, { data: invoices }, { data: handovers }] = await Promise.all([
     supabase.from('cod_collections').select('amount, handover_id, driver:drivers(full_name)').eq('org_id', org).gte('collected_at', `${today}T00:00:00`),
     supabase.from('merchant_ledger').select('amount, merchant:merchants(id, name, code)').eq('org_id', org),
-    supabase.from('payouts').select('id, amount, orders_count, status, period_start, period_end, paid_at, merchant:merchants(name)').eq('org_id', org).order('period_end', { ascending: false }).limit(10),
+    supabase.from('payouts').select('id, amount, orders_count, status, period_start, period_end, paid_at, merchant:merchants(name)').eq('org_id', org).order('period_end', { ascending: false }).limit(20),
     supabase.from('invoices').select('id, number, total, status, due_at, merchant:merchants(name)').eq('org_id', org).order('number', { ascending: false }).limit(10),
     supabase.from('cash_handovers').select('id, expected_amount, counted_amount, difference, status, short_code, driver:drivers(full_name)').eq('org_id', org).eq('date', today)
   ]);
@@ -35,6 +37,7 @@ export default async function FinancePage() {
         <StatCard label="Balance owed to merchants" value={euro(owed, 0)} icon="store" tint="#EEF0FF" ink="#4A49E3" note="Ledger: COD in, fees out" />
         <StatCard label="Handovers today" value={String(handovers?.length ?? 0)} icon="check" tint="#E8F8EF" ink="#067647" note={`${(handovers ?? []).filter((h) => h.status === 'pending').length} waiting to be counted`} />
       </section>
+      <MoneyRuns orgId={ws.org.id} />
       <div className="flex flex-wrap items-start gap-4">
         <section className="card flex min-w-0 flex-[1_1_320px] flex-col gap-2.5 p-5 text-[13px]">
           <h2 className="text-base font-semibold">Cash per driver (not handed in)</h2>
@@ -50,13 +53,13 @@ export default async function FinancePage() {
         <section className="card min-w-0 flex-[1_1_420px] overflow-x-auto">
           <h2 className="px-5 pt-5 text-base font-semibold">Payouts</h2>
           <table className="mt-2 w-full border-collapse text-[13px]"><tbody>{(payouts ?? []).map((p: any) => (
-            <tr key={p.id} className="border-t border-line"><td className="td pl-5 font-medium">{p.merchant?.name}</td><td className="td font-mono text-ink-2">{p.period_start} → {p.period_end}</td><td className="td text-right font-mono">{euro(p.amount)}</td><td className="td pr-5"><Pill bg={PS[p.status]?.[0] ?? '#F0F2F7'} ink={PS[p.status]?.[1] ?? '#5B6378'}>{p.status}</Pill></td></tr>
+            <tr key={p.id} className="border-t border-line"><td className="td pl-5 font-medium">{p.merchant?.name}</td><td className="td font-mono text-ink-2">{p.period_start} → {p.period_end}</td><td className="td text-right font-mono">{euro(p.amount)}</td><td className="td"><Pill bg={PS[p.status]?.[0] ?? '#F0F2F7'} ink={PS[p.status]?.[1] ?? '#5B6378'}>{p.status}</Pill></td><td className="td pr-5 text-right">{p.status !== 'paid' && <MarkPaid id={p.id} />}</td></tr>
           ))}</tbody></table>
         </section>
         <section className="card min-w-0 flex-[1_1_420px] overflow-x-auto">
           <h2 className="px-5 pt-5 text-base font-semibold">Invoices</h2>
           <table className="mt-2 w-full border-collapse text-[13px]"><tbody>{(invoices ?? []).map((i: any) => (
-            <tr key={i.id} className="border-t border-line"><td className="td pl-5 font-mono font-medium">{i.number}</td><td className="td">{i.merchant?.name}</td><td className="td font-mono text-ink-2">due {i.due_at?.slice(0, 10)}</td><td className="td text-right font-mono">{euro(i.total)}</td><td className="td pr-5"><Pill bg={PS[i.status]?.[0] ?? '#F0F2F7'} ink={PS[i.status]?.[1] ?? '#5B6378'}>{i.status}</Pill></td></tr>
+            <tr key={i.id} className="border-t border-line"><td className="td pl-5 font-mono font-medium"><Link className="link" href={`/invoice/${i.id}`} target="_blank">{i.number}</Link></td><td className="td">{i.merchant?.name}</td><td className="td font-mono text-ink-2">due {i.due_at?.slice(0, 10)}</td><td className="td text-right font-mono">{euro(i.total)}</td><td className="td pr-5"><Pill bg={PS[i.status]?.[0] ?? '#F0F2F7'} ink={PS[i.status]?.[1] ?? '#5B6378'}>{i.status}</Pill></td></tr>
           ))}</tbody></table>
         </section>
       </div>

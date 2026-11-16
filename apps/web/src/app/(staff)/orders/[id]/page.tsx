@@ -32,6 +32,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         <StatusPill status={o.status as OrderStatus} />
         {o.needs_pin && <span className="rounded-full bg-danger-tint px-2.5 py-0.5 text-xs font-medium text-danger-ink">Needs map pin</span>}
         <span className="flex-1" />
+        <Link href={`/labels?ids=${o.id}`} target="_blank" className="btn-ghost">Print label</Link>
         <Link href={`/t/${o.tracking_code}`} target="_blank" className="btn-ghost">Customer tracking page ↗</Link>
       </div>
 

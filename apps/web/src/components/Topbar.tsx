@@ -5,12 +5,12 @@ import { useState } from 'react';
 import { Icon } from './Icon';
 import { findNav } from './nav';
 
-export function Topbar({ liveDrivers }: { liveDrivers: number }) {
+export function Topbar({ liveDrivers, unread = 0 }: { liveDrivers: number; unread?: number }) {
   const path = usePathname();
   const router = useRouter();
   const [q, setQ] = useState('');
   const nav = findNav(path);
-  const page = path === '/orders/new' ? 'New order' : nav?.item.label ?? '';
+  const page = path === '/orders/new' ? 'New order' : path === '/notifications' ? 'Notifications' : path.startsWith('/dispatch/') ? 'Route' : nav?.item.label ?? '';
   return (
     <header className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center gap-3 border-b border-line bg-white px-7 py-3">
       <nav aria-label="Breadcrumb" className="flex min-w-[200px] flex-1 items-center gap-2 text-sm">
@@ -31,8 +31,9 @@ export function Topbar({ liveDrivers }: { liveDrivers: number }) {
           <span className="h-[7px] w-[7px] rounded-full bg-success" />{liveDrivers} drivers live
         </Link>
       )}
-      <Link href="/helpdesk" aria-label="Notifications" className="relative flex h-9 w-9 items-center justify-center rounded-[10px] border border-line bg-white">
+      <Link href="/notifications" aria-label="Notifications" className="relative flex h-9 w-9 items-center justify-center rounded-[10px] border border-line bg-white">
         <Icon name="bell" color="#5B6378" />
+        {unread > 0 && <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold text-white">{unread > 9 ? '9+' : unread}</span>}
       </Link>
       <Link href="/orders/new" className="btn-primary"><Icon name="plus" size={16} color="#fff" strokeWidth={2} />New order</Link>
     </header>

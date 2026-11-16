@@ -1,14 +1,20 @@
 'use client';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Logo } from '@/components/Logo';
 import { AuthAside } from '../AuthAside';
 
 export default function RegisterPage() {
+  return <Suspense><RegisterInner /></Suspense>;
+}
+
+function RegisterInner() {
   const router = useRouter();
-  const [form, setForm] = useState({ fullName: '', email: '', password: '' });
+  const params = useSearchParams();
+  const next = params.get('next') || '/onboarding';
+  const [form, setForm] = useState({ fullName: '', email: params.get('email') ?? '', password: '' });
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [k]: e.target.value });
@@ -20,11 +26,11 @@ export default function RegisterPage() {
     const { data, error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
-      options: { data: { full_name: form.fullName }, emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding` }
+      options: { data: { full_name: form.fullName }, emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` }
     });
     setBusy(false);
     if (error) return setMsg({ ok: false, text: error.message });
-    if (data.session) { router.replace('/onboarding'); router.refresh(); return; }
+    if (data.session) { router.replace(next); router.refresh(); return; }
     setMsg({ ok: true, text: `We sent a confirmation link to ${form.email}. Open it to continue setting up your company.` });
   }
 

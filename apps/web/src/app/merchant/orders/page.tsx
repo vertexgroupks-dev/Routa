@@ -27,7 +27,7 @@ export default async function MerchantOrders({ searchParams }: { searchParams: P
               <td className="td text-right font-mono">{Number(o.cod_amount) > 0 ? euro(o.cod_amount) : '—'}</td>
               <td className="td text-right font-mono">{euro(Number(o.delivery_fee ?? 0) + Number(o.weight_fee ?? 0) + Number(o.cod_fee ?? 0))}</td>
               <td className="td"><StatusPill status={o.status as OrderStatus} /></td>
-              <td className="td pr-5"><a href={`/t/${o.tracking_code}`} target="_blank" className="link">Open ↗</a></td>
+              <td className="td pr-5"><a href={`/t/${o.tracking_code}`} target="_blank" className="link">Open ↗</a> · <a href={`/labels?ids=${o.id}`} target="_blank" className="link">Label</a></td>
             </tr>
           ))}</tbody>
         </table>

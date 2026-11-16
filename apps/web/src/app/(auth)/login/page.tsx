@@ -45,7 +45,7 @@ function LoginForm() {
         <input className="input" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" />
       </label>
       <label className="label">
-        <span className="flex justify-between">Password <Link href="/register?reset=1" className="link">Forgot password?</Link></span>
+        <span className="flex justify-between">Password <Link href="/forgot" className="link">Forgot password?</Link></span>
         <input className="input" type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
       </label>
       {error && <p className="rounded-[10px] bg-danger-tint px-3 py-2 text-[13px] text-danger-ink">{error}</p>}
