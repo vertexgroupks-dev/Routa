@@ -1,0 +1,5 @@
+-- 018 · Security hardening (applied in Supabase; full text in the project's migration history)
+-- * private.protect_owners trigger on memberships: only owners create/change/remove owners; a company always keeps one active owner
+-- * memberships.mgr_update no longer lets anyone edit their own row
+-- * api_keys: direct insert/update policies removed (keys only via create_api_key / revoke_api_key)
+-- * webhook_endpoints.url must be a public https address (no localhost/.local/.internal/supabase hosts)

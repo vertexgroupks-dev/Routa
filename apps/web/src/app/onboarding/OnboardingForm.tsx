@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 const DEMO_ROLES = [
-  { role: 'owner', label: 'Owner / admin', body: 'Every screen of the office dashboard.' },
+  { role: 'admin', label: 'Operations admin', body: 'Every screen of the office dashboard.' },
   { role: 'dispatcher', label: 'Dispatcher', body: 'Orders, routes, fleet and live map.' },
   { role: 'front_desk', label: 'Front desk', body: 'Create walk-in orders and look up parcels.' },
   { role: 'finance', label: 'Finance', body: 'COD, cash check-in, payouts and invoices.' },

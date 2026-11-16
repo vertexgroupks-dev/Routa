@@ -1,0 +1,2 @@
+-- 019 · Demo company: excluded from the nightly close; private.roll_demo_forward() moves its dates forward every night
+-- (cron "routa-demo-roll-forward", 23:10 UTC) so "today" always shows live routes. Remove with the other demo pieces before launch.

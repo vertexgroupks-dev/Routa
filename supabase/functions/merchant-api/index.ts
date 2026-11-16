@@ -72,6 +72,7 @@ Deno.serve(async (req) => {
     return error ? json({ error: error.message }, 400) : json({ orders: (data ?? []).map(shape) });
   }
 
+  if (!code || !/^[A-Za-z0-9#_-]{3,40}$/.test(code)) return json({ error: 'Invalid order code' }, 400);
   const { data: o } = await db.from('orders').select('*').eq('merchant_id', k.merchant_id).or(`code.eq.${code},merchant_ref.eq.${code},tracking_code.eq.${code}`).limit(1).maybeSingle();
   if (!o) return json({ error: 'Order not found' }, 404);
 
