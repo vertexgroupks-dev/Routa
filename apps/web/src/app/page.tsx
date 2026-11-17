@@ -83,10 +83,7 @@ export default function Landing() {
       `}</style>
 
       {/* ───────────── Hero ───────────── */}
-      <section className="relative overflow-hidden bg-[#070B24] text-white">
-        <div aria-hidden className="glow pointer-events-none absolute -left-40 -top-40 h-[620px] w-[620px] rounded-full bg-[#4A49E3] opacity-40 blur-[140px]" />
-        <div aria-hidden className="glow pointer-events-none absolute -right-32 top-24 h-[520px] w-[520px] rounded-full bg-[#38D6F5] opacity-20 blur-[140px]" style={{ animationDelay: '-6s' }} />
-        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.04)_1px,transparent_1px)] bg-[size:56px_56px] [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_75%)]" />
+      <section className="relative overflow-hidden bg-[#0E1325] text-white">
 
         <header className="relative mx-auto flex max-w-[1240px] items-center gap-3 px-5 py-5 sm:gap-6 sm:px-8">
           <Logo light dark />
@@ -118,8 +115,7 @@ export default function Landing() {
           </div>
 
           <div className="hero-in relative mt-14">
-            <div aria-hidden className="absolute -inset-x-10 -bottom-10 top-10 rounded-[48px] bg-gradient-to-r from-[#4A49E3]/50 via-[#38D6F5]/30 to-[#C8F25C]/30 blur-3xl" />
-            <div className="relative overflow-hidden rounded-[26px] border border-white/15 bg-[#0B1030] shadow-[0_60px_140px_-40px_rgb(74_73_227/0.8)]">
+            <div className="relative overflow-hidden rounded-[26px] border border-white/15 bg-[#0B1030] shadow-[0_40px_80px_-30px_rgb(0_0_0/0.6)]">
               <div className="flex items-center gap-2 border-b border-white/10 bg-white/[.03] px-4 py-3">
                 <span className="h-2.5 w-2.5 rounded-full bg-[#FF6159]" /><span className="h-2.5 w-2.5 rounded-full bg-[#FFBD2E]" /><span className="h-2.5 w-2.5 rounded-full bg-[#28C941]" />
                 <span className="ml-3 rounded-md bg-white/5 px-3 py-1 text-[12px] text-white/50">routa.app/live-map</span>
@@ -149,7 +145,7 @@ export default function Landing() {
       </section>
 
       {/* ───────────── AI ───────────── */}
-      <section id="ai" className="relative overflow-hidden bg-gradient-to-b from-[#070B24] to-[#12164A] text-white">
+      <section id="ai" className="relative overflow-hidden bg-[#0E1325] text-white">
         <div className="mx-auto max-w-[1240px] px-5 py-24 sm:px-8">
           <div className="max-w-[760px]">
             <h2 className="text-[38px] font-extrabold leading-[1.05] tracking-[-0.035em] sm:text-[54px]">AI that saves kilometres, fuel and hours — every single morning.</h2>
@@ -246,9 +242,7 @@ export default function Landing() {
 
       {/* ───────────── Pricing ───────────── */}
       <section id="pricing" className="mx-auto max-w-[1240px] px-5 py-24 sm:px-8">
-        <div className="relative overflow-hidden rounded-[36px] bg-[#070B24] p-8 text-white sm:p-14">
-          <div aria-hidden className="glow pointer-events-none absolute -right-24 -top-24 h-[420px] w-[420px] rounded-full bg-[#4A49E3] opacity-50 blur-[110px]" />
-          <div aria-hidden className="glow pointer-events-none absolute -bottom-32 left-10 h-[360px] w-[360px] rounded-full bg-[#C8F25C] opacity-20 blur-[110px]" style={{ animationDelay: '-7s' }} />
+        <div className="relative overflow-hidden rounded-[36px] bg-[#0E1325] p-8 text-white sm:p-14">
           <div className="relative grid gap-12 lg:grid-cols-[1.1fr_1fr] lg:items-center">
             <div>
               <h2 className="text-[38px] font-extrabold leading-[1.05] tracking-[-0.035em] sm:text-[52px]">One platform. Priced for your company.</h2>
@@ -282,8 +276,7 @@ export default function Landing() {
       </section>
 
       {/* ───────────── Closing ───────────── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#4A49E3] via-[#3B38BF] to-[#0E7490] text-white">
-        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.06)_1px,transparent_1px)] bg-[size:48px_48px]" />
+      <section className="relative overflow-hidden bg-[#4A49E3] text-white">
         <div className="relative mx-auto grid max-w-[1240px] items-center gap-10 px-5 py-24 sm:px-8 lg:grid-cols-[1.4fr_1fr]">
           <div>
             <h2 className="text-[40px] font-extrabold leading-[1.02] tracking-[-0.04em] sm:text-[60px]">Send us one day of orders. We’ll show you the routes.</h2>
@@ -297,7 +290,7 @@ export default function Landing() {
       </section>
 
       {/* ───────────── Footer ───────────── */}
-      <footer className="bg-[#070B24] text-white/60">
+      <footer className="bg-[#0E1325] text-white/60">
         <div className="mx-auto flex max-w-[1240px] flex-wrap items-start gap-10 px-5 py-14 text-[14.5px] sm:px-8">
           <div className="flex flex-col gap-3">
             <span className="flex items-center gap-2.5"><LogoMark dark size={30} /><Wordmark color="#fff" dot="#C8F25C" height={23} /></span>

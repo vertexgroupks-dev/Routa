@@ -86,7 +86,7 @@ export function PlanCompare() {
   const value = planned ? after : before;
   return (
     <div ref={ref} className="grid gap-6 lg:grid-cols-[1.25fr_1fr] lg:items-center">
-      <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[#0B1030] shadow-[0_40px_120px_-40px_rgb(74_73_227/0.7)]">
+      <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[#0B1030] shadow-[0_30px_70px_-30px_rgb(0_0_0/0.6)]">
         <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full">
           <defs><pattern id="pc" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#fff" strokeOpacity="0.05" /></pattern></defs>
           <rect width={W} height={H} fill="url(#pc)" />
