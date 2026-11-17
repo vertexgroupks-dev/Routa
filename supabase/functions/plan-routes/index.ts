@@ -24,7 +24,8 @@ Deno.serve(async (req) => {
   const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
     global: { headers: { Authorization: req.headers.get('authorization') ?? '' } }, auth: { persistSession: false }
   });
-  const { org_id, date } = await req.json().catch(() => ({}));
+  const { org_id, date, mode } = await req.json().catch(() => ({}));
+  const spread = mode !== 'fuel'; // default: use all free drivers so the day finishes sooner
   if (!org_id || !/^\d{4}-\d{2}-\d{2}$/.test(String(date))) return json({ error: 'org_id and date are required' }, 400);
 
   const { data: d, error } = await sb.rpc('planning_data', { p_org: org_id, p_date: date });
@@ -90,7 +91,8 @@ Deno.serve(async (req) => {
   const points: LatLng[] = [hub, ...plannable.map((o) => ({ lat: o.lat, lng: o.lng }))];
   const m = await travelMatrix(points);
   const jobs: Job[] = plannable.map((o) => ({ id: o.id, kg: Number(o.kg) || 1, parcels: Number(o.parcels) || 1 }));
-  const plan = solve(jobs, units, m.dist, m.dur, { serviceS, maxRouteS });
+  const maxStops = spread ? Math.ceil(jobs.length / units.length) : undefined;
+  const plan = solve(jobs, units, m.dist, m.dur, { serviceS, maxRouteS, maxStops });
   for (const u of plan.unassigned) { const o = plannable[u.node - 1]; unassigned.push({ order_id: o.id, code: o.code, reason: u.reason }); }
 
   // Same drivers, stops in the order they came in: what it would cost without optimising.
@@ -125,9 +127,9 @@ Deno.serve(async (req) => {
     orders: orders.length, planned: plannable.length - plan.unassigned.length, routes: routes.length, geocoded: found,
     km: Math.round(totalM / 100) / 10, minutes: Math.round(totalS / 60), fuel_l: Math.round(fuelL * 10) / 10,
     km_saved: Math.max(0, Math.round((naiveM - totalM) / 100) / 10), fuel_saved_l: Math.max(0, Math.round((naiveFuelL - fuelL) * 10) / 10),
-    distances: m.source, drivers_free: units.length
+    distances: m.source, drivers_free: units.length, mode: spread ? 'spread' : 'fuel'
   };
-  const { data: saved, error: e } = await sb.rpc('apply_route_plan', { p_org: org_id, p_date: date, p_plan: { routes, unassigned, summary, settings: { serviceS, start: start.toISOString(), end: dayEnd.toISOString() } } });
+  const { data: saved, error: e } = await sb.rpc('apply_route_plan', { p_org: org_id, p_date: date, p_plan: { routes, unassigned, summary, settings: { mode: spread ? 'spread' : 'fuel', serviceS, start: start.toISOString(), end: dayEnd.toISOString() } } });
   if (e) return json({ error: e.message }, 403);
   return json({ ok: true, summary, unassigned, saved });
 });

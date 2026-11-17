@@ -78,11 +78,12 @@ export function AutoPlan({ orgId, date, drafts, live }: { orgId: string; date: s
   const [busy, setBusy] = useState(false);
   const [res, setRes] = useState<PlanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState<'spread' | 'fuel'>('spread');
 
   async function run() {
     if (drafts > 0 && !confirm(`This replaces the ${drafts} draft route(s) for ${date}. Published routes are not touched. Continue?`)) return;
     setBusy(true); setError(null); setRes(null);
-    const { data, error } = await createClient().functions.invoke('plan-routes', { body: { org_id: orgId, date } });
+    const { data, error } = await createClient().functions.invoke('plan-routes', { body: { org_id: orgId, date, mode } });
     setBusy(false);
     if (error) {
       let msg = error.message;
@@ -104,6 +105,11 @@ export function AutoPlan({ orgId, date, drafts, live }: { orgId: string; date: s
           <h2 className="text-[15px] font-semibold">Automatic route planning</h2>
           <p className="text-[13px] text-ink-3">Finds every address on the map, splits the orders between your free drivers and vehicles (weight, parcels, working hours) and orders the stops for the shortest drive. You review, then publish.</p>
         </div>
+        <span className="flex rounded-xl bg-white/60 p-1 text-[12.5px]">
+          {([['spread', 'Use all drivers', 'Faster: work is shared'], ['fuel', 'Fewest drivers', 'Less fuel, longer day']] as const).map(([k, l, t]) => (
+            <button key={k} type="button" title={t} onClick={() => setMode(k)} className={`rounded-lg px-3 py-1.5 font-medium transition ${mode === k ? 'bg-ink text-white' : 'text-ink-2 hover:bg-white'}`}>{l}</button>
+          ))}
+        </span>
         <button disabled={busy} onClick={run} className="btn-dark h-11 px-5">{busy ? 'Planning… (up to a minute)' : drafts ? 'Re-plan routes' : 'Plan routes automatically'}</button>
       </div>
       {live > 0 && !res && <p className="text-xs text-ink-3">{live} route(s) already published for this day stay as they are; only orders not on them are planned.</p>}

@@ -86,7 +86,7 @@ export function NewOrderForm({ orgId, merchants, zones, hub }: Props) {
           <label className="label">Parcels<input className="input" type="number" min="1" value={f.parcels} onChange={set('parcels')} /></label>
           <label className="label">Cash on delivery (€)<input className="input" type="number" step="0.01" min="0" value={f.cod_amount} onChange={set('cod_amount')} /></label>
           <label className="label">Fees paid by
-            <select className="input" value={f.fee_payer} onChange={set('fee_payer')}><option value="merchant">Merchant</option><option value="customer">Customer</option></select>
+            <select className="input" value={f.fee_payer} onChange={set('fee_payer')}><option value="merchant">Merchant</option><option value="recipient">Customer (pays the driver)</option></select>
           </label>
           <label className="label col-span-2">Note for the driver<textarea className="input min-h-16" value={f.notes_driver} onChange={set('notes_driver')} placeholder="Call before arriving" /></label>
         </section>

@@ -8,7 +8,7 @@
 
 export type Job = { id: string; kg: number; parcels: number };
 export type Unit = { driverId: string; vehicleId: string | null; capKg: number; capParcels: number };
-export type Options = { serviceS: number; maxRouteS: number };
+export type Options = { serviceS: number; maxRouteS: number; maxStops?: number }; // maxStops spreads work over more drivers
 export type PlannedRoute = { unit: Unit; nodes: number[]; distM: number; durS: number; kg: number; parcels: number };
 export type Plan = { routes: PlannedRoute[]; unassigned: { node: number; reason: string }[] };
 
@@ -21,6 +21,7 @@ export function solve(jobs: Job[], units: Unit[], dist: number[][], dur: number[
   const job = (node: number) => jobs[node - 1]!;
   const pathDist = (nodes: number[]) => { let d = 0, prev = 0; for (const x of nodes) { d += dist[prev]![x]!; prev = x; } return d + dist[prev]![0]!; };
   const pathDur = (nodes: number[]) => { let d = 0, prev = 0; for (const x of nodes) { d += dur[prev]![x]! + opt.serviceS; prev = x; } return d + dur[prev]![0]!; };
+  const maxStops = opt.maxStops && opt.maxStops > 0 ? opt.maxStops : Infinity;
   const maxKg = Math.max(...units.map((u) => u.capKg));
   const maxParcels = Math.max(...units.map((u) => u.capParcels));
 
@@ -50,7 +51,7 @@ export function solve(jobs: Job[], units: Unit[], dist: number[][], dur: number[
       if (A.nodes[A.nodes.length - 1] !== i || B.nodes[0] !== j) continue;
       if (A.kg + B.kg > capKg || A.parcels + B.parcels > capParcels) continue;
       const nodes = [...A.nodes, ...B.nodes];
-      if (pathDur(nodes) > opt.maxRouteS) continue;
+      if (nodes.length > maxStops || pathDur(nodes) > opt.maxRouteS) continue;
       A.nodes = nodes; A.kg += B.kg; A.parcels += B.parcels;
       trips.delete(b);
       for (const x of B.nodes) tripOf.set(x, a);
@@ -82,17 +83,21 @@ export function solve(jobs: Job[], units: Unit[], dist: number[][], dur: number[
   }
   const leftovers = pending;
 
-  // Cheapest insertion for what didn't get a vehicle
+  // Cheapest insertion for what didn't get a vehicle (first respecting the stop limit, then without it)
   for (const x of leftovers) {
     let best: { r: PlannedRoute; pos: number; cost: number } | null = null;
-    for (const r of routes) {
-      if (r.kg + job(x).kg > r.unit.capKg || r.parcels + job(x).parcels > r.unit.capParcels) continue;
-      for (let p = 0; p <= r.nodes.length; p++) {
-        const nodes = [...r.nodes.slice(0, p), x, ...r.nodes.slice(p)];
-        if (pathDur(nodes) > opt.maxRouteS) continue;
-        const cost = pathDist(nodes) - pathDist(r.nodes);
-        if (!best || cost < best.cost) best = { r, pos: p, cost };
+    for (const limit of [maxStops, Infinity]) {
+      for (const r of routes) {
+        if (r.nodes.length + 1 > limit) continue;
+        if (r.kg + job(x).kg > r.unit.capKg || r.parcels + job(x).parcels > r.unit.capParcels) continue;
+        for (let p = 0; p <= r.nodes.length; p++) {
+          const nodes = [...r.nodes.slice(0, p), x, ...r.nodes.slice(p)];
+          if (pathDur(nodes) > opt.maxRouteS) continue;
+          const cost = pathDist(nodes) - pathDist(r.nodes);
+          if (!best || cost < best.cost) best = { r, pos: p, cost };
+        }
       }
+      if (best) break;
     }
     if (best) { best.r.nodes.splice(best.pos, 0, x); best.r.kg += job(x).kg; best.r.parcels += job(x).parcels; }
     else unassigned.push({ node: x, reason: 'Not enough drivers or vehicle space today' });
