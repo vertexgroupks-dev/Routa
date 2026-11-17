@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { STOP_STATUS, euro, time, dateLong } from '@routa/shared';
+import { STOP_STATUS, euro, time, dateLong, todayKs } from '@routa/shared';
 import { supabase } from '../src/supabase';
 import { useTodayRoute } from '../src/useRoute';
 import { colors, mono, ui } from '../src/theme';
@@ -17,7 +17,7 @@ export default function Today() {
   if (!route) {
     return (
       <SafeAreaView style={[ui.screen, { padding: 24, gap: 16, justifyContent: 'center' }]}>
-        <Text style={ui.h1}>No route for today</Text>
+        <Text style={ui.h1}>No route yet</Text>
         <Text style={ui.body}>When your dispatcher publishes today’s routes you’ll get a notification and your stops will appear here.</Text>
         {error && <Text style={ui.error}>{error}</Text>}
         <Pressable style={ui.btnGhost} onPress={reload}><Text style={ui.btnGhostText}>Refresh</Text></Pressable>
@@ -54,7 +54,7 @@ export default function Today() {
         ListHeaderComponent={
           <View style={{ gap: 12, marginBottom: 6 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={[ui.small, { flex: 1 }]}>{dateLong()}</Text>
+              <Text style={[ui.small, { flex: 1 }]}>{route.date === todayKs() ? dateLong() : `Route for ${route.date}`}</Text>
               <Pressable onPress={() => supabase.auth.signOut()}><Text style={ui.small}>Sign out</Text></Pressable>
             </View>
             <View style={{ backgroundColor: colors.night, borderRadius: 20, padding: 18, gap: 12 }}>
@@ -82,6 +82,7 @@ export default function Today() {
                 <Pressable style={[ui.btn, { backgroundColor: colors.lime }]} onPress={() => router.push('/end-of-day')}><Text style={[ui.btnText, { color: colors.night }]}>End shift · hand in cash</Text></Pressable>
               )}
             </View>
+            {route.date !== todayKs() && <Text style={{ backgroundColor: colors.warningTint, color: colors.warningInk, padding: 12, borderRadius: 12, overflow: 'hidden' }}>This route is planned for {route.date}. You can look at it now; normally you start it on that day.</Text>}
             <Text style={ui.h2}>Stops</Text>
           </View>
         }

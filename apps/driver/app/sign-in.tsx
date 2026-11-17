@@ -5,7 +5,8 @@ import { supabase } from '../src/supabase';
 import { colors, mono, ui } from '../src/theme';
 
 export default function SignIn() {
-  const [mode, setMode] = useState<'phone' | 'email'>('phone');
+  // Email first while SMS login isn't connected yet.
+  const [mode, setMode] = useState<'phone' | 'email'>('email');
   const [phone, setPhone] = useState('+383 ');
   const [code, setCode] = useState('');
   const [sent, setSent] = useState(false);
@@ -70,6 +71,15 @@ export default function SignIn() {
                 <Text style={{ fontSize: 13, fontWeight: '500', color: colors.ink }}>Password</Text>
                 <TextInput style={ui.input} secureTextEntry value={password} onChangeText={setPassword} />
                 <Pressable style={[ui.btn, busy && { opacity: 0.6 }]} disabled={busy} onPress={emailSignIn}><Text style={ui.btnText}>{busy ? 'Signing in…' : 'Sign in'}</Text></Pressable>
+                {/* Demo drivers — remove before a real company uses the app */}
+                <Text style={{ fontSize: 12, color: colors.ink3 }}>Demo drivers · password Routa2026!</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {['mendim', 'arben', 'blerta', 'driton'].map((u) => (
+                    <Pressable key={u} onPress={() => { setEmail(`${u}@routa.demo`); setPassword('Routa2026!'); }} style={{ paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, backgroundColor: colors.brandTint }}>
+                      <Text style={{ color: colors.brandDeep, fontWeight: '500', textTransform: 'capitalize' }}>{u}</Text>
+                    </Pressable>
+                  ))}
+                </View>
               </>
             )}
             {error && <Text style={ui.error}>{error}</Text>}

@@ -47,9 +47,11 @@ export default function StopScreen() {
 
   async function load() {
     setBusy(true);
-    const { error } = await supabase.rpc('driver_load_parcel', { p_route_id: route!.id, p_code: o.code });
+    const { data, error } = await supabase.rpc('driver_load_parcel', { p_route_id: route!.id, p_code: o.code });
     setBusy(false);
-    if (error) Alert.alert('Not loaded', error.message); else reload();
+    if (error) Alert.alert('Not loaded', error.message);
+    else if ((data as any)?.ok === false) Alert.alert('Not loaded', (data as any).error === 'not_on_this_route' ? 'This parcel is not on your route.' : 'Parcel not found.');
+    else reload();
   }
 
   async function deliver() {

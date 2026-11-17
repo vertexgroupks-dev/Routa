@@ -6,9 +6,9 @@ export type Stop = {
   id: string; sequence: number; status: StopStatus; eta: string | null;
   order: { id: string; code: string; tracking_code: string; customer_name: string; customer_phone: string; address_line: string | null; city: string | null; landmark: string | null; address_details: Record<string, unknown> | null; notes_driver: string | null; cod_amount: number; parcels: number | null; weight_kg: number | null; window_start: string | null; window_end: string | null; lat: number | null; lng: number | null };
 };
-export type Route = { id: string; code: string; status: string; color: string | null; dock: string | null; planned_km: number | null; vehicle: { plate: string; model: string } | null; stops: Stop[] };
+export type Route = { id: string; code: string; date: string; status: string; color: string | null; dock: string | null; planned_km: number | null; vehicle: { plate: string; model: string } | null; stops: Stop[] };
 
-/** Today's route for the signed-in driver (RLS only returns the driver's own route). */
+/** The driver's current route: today's, or the next published one (RLS only returns the driver's own, published routes). */
 export function useTodayRoute() {
   const [route, setRoute] = useState<Route | null>(null);
   const [loading, setLoading] = useState(true);
@@ -18,15 +18,18 @@ export function useTodayRoute() {
     setError(null);
     const { data, error } = await supabase
       .from('routes')
-      .select('id, code, status, color, dock, planned_km, vehicle:vehicles(plate, model), stops:route_stops(id, sequence, status, eta, order:orders(id, code, tracking_code, customer_name, customer_phone, address_line, city, landmark, address_details, notes_driver, cod_amount, parcels, weight_kg, window_start, window_end, location))')
-      .eq('date', todayKs())
+      .select('id, code, date, status, color, dock, planned_km, vehicle:vehicles(plate, model), stops:route_stops(id, sequence, status, eta, order:orders(id, code, tracking_code, customer_name, customer_phone, address_line, city, landmark, address_details, notes_driver, cod_amount, parcels, weight_kg, window_start, window_end, location))')
+      .gte('date', todayKs())
       .neq('status', 'cancelled')
+      .order('date')
       .order('code')
-      .limit(1)
-      .maybeSingle();
+      .limit(5);
     if (error) setError(error.message);
-    if (data) {
-      const r = data as any;
+    const list = (data ?? []) as any[];
+    // An unfinished route first; a finished one from today stays visible for the end-of-day screen.
+    const pick = list.find((x) => x.status !== 'completed') ?? list.find((x) => x.date === todayKs()) ?? null;
+    if (pick) {
+      const r = pick;
       r.stops = (r.stops ?? [])
         .map((s: any) => ({ ...s, order: { ...s.order, ...pointToLatLng(s.order?.location) } }))
         .sort((a: Stop, b: Stop) => a.sequence - b.sequence);
