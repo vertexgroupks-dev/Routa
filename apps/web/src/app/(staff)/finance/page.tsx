@@ -14,7 +14,7 @@ export default async function FinancePage() {
   const org = ws.org.id;
   const today = todayKs();
   const [{ data: cod }, { data: ledger }, { data: payouts }, { data: invoices }, { data: handovers }] = await Promise.all([
-    supabase.from('cod_collections').select('amount, handover_id, driver:drivers(full_name)').eq('org_id', org).gte('collected_at', `${today}T00:00:00`),
+    supabase.from('cod_collections').select('amount, handover_id, driver:drivers(full_name)').eq('org_id', org).gte('collected_at', `${today}T00:00:00${new Intl.DateTimeFormat('en', { timeZone: 'Europe/Belgrade', timeZoneName: 'longOffset' }).formatToParts(new Date()).find((p) => p.type === 'timeZoneName')?.value.replace('GMT', '') || '+01:00'}`),
     supabase.from('merchant_ledger').select('amount, merchant:merchants(id, name, code)').eq('org_id', org),
     supabase.from('payouts').select('id, amount, orders_count, status, period_start, period_end, paid_at, merchant:merchants(name)').eq('org_id', org).order('period_end', { ascending: false }).limit(20),
     supabase.from('invoices').select('id, number, total, status, due_at, merchant:merchants(name)').eq('org_id', org).order('number', { ascending: false }).limit(10),

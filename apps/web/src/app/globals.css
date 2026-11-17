@@ -36,11 +36,15 @@
   --color-info-tint: #E6F0FD;
 }
 
-html, body { background: #EEF0F6; color: var(--color-ink); }
-body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; font-feature-settings: 'ss01', 'cv11'; }
-a { color: inherit; text-decoration: none; }
-.link { color: var(--color-brand-hover); font-weight: 500; }
-.link:hover { color: var(--color-brand-deep); }
+@layer base {
+  html, body { background: #EEF0F6; color: var(--color-ink); }
+  body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; font-feature-settings: 'ss01', 'cv11'; }
+  a { color: inherit; text-decoration: none; }
+}
+@layer components {
+  .link { color: var(--color-brand-hover); font-weight: 500; }
+  .link:hover { color: var(--color-brand-deep); }
+}
 ::selection { background: #DFE2FF; }
 
 /* Soft, colourful backdrop that shows through the glass panels (desktop dashboard). */

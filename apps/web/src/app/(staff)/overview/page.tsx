@@ -16,20 +16,25 @@ export default async function OverviewPage() {
   const today = todayKs();
   const weekAgo = new Date(Date.now() - 6 * 86400_000).toLocaleDateString('en-CA', { timeZone: 'Europe/Belgrade' });
   const head = { count: 'exact' as const, head: true };
+  // Start of today in Kosovo time, as an exact timestamp (handles summer/winter time).
+  const tz = new Intl.DateTimeFormat('en', { timeZone: 'Europe/Belgrade', timeZoneName: 'longOffset' }).formatToParts(new Date()).find((p) => p.type === 'timeZoneName')?.value.replace('GMT', '') || '+01:00';
+  const dayStart = `${today}T00:00:00${tz}`;
 
-  const [{ data: todayOrders }, { data: week }, { data: routes }, { data: tickets }, { data: cod }, m, d, v, mem, all, waiting] = await Promise.all([
+  const [{ data: todayOrders }, { data: week }, { data: routes }, { data: tickets }, { data: cod }, m, d, v, mem, all, waiting, created] = await Promise.all([
     sb.from('orders').select('status').eq('org_id', org).eq('delivery_date', today),
     sb.from('orders').select('status, delivery_date').eq('org_id', org).gte('delivery_date', weekAgo).lte('delivery_date', today).in('status', ['delivered', 'failed_attempt', 'rescheduled', 'returning', 'returned_to_hub', 'returned_to_merchant']),
     sb.from('routes').select('id, code, color, status, driver:drivers(full_name), stops:route_stops(status, eta)').eq('org_id', org).eq('date', today).order('code'),
     sb.from('tickets').select('id, type, title, description').eq('org_id', org).neq('status', 'resolved').order('priority').order('created_at', { ascending: false }).limit(5),
-    sb.from('cod_collections').select('amount, handover_id').eq('org_id', org).gte('collected_at', `${today}T00:00:00`),
+    sb.from('cod_collections').select('amount, handover_id').eq('org_id', org).gte('collected_at', dayStart),
     sb.from('merchants').select('id', head).eq('org_id', org),
     sb.from('drivers').select('id', head).eq('org_id', org),
     sb.from('vehicles').select('id', head).eq('org_id', org),
     sb.from('memberships').select('id', head).eq('org_id', org),
     sb.from('orders').select('id', head).eq('org_id', org),
-    sb.from('orders').select('id', head).eq('org_id', org).in('status', ['confirmed', 'received', 'packed']).lte('delivery_date', today)
+    sb.from('orders').select('id', head).eq('org_id', org).in('status', ['confirmed', 'received', 'packed']).lte('delivery_date', today),
+    sb.from('orders').select('id', head).eq('org_id', org).gte('created_at', dayStart)
   ]);
+  const newToday = created.count ?? 0;
 
   const o = todayOrders ?? [];
   const delivered = o.filter((x) => x.status === 'delivered').length;
@@ -63,7 +68,7 @@ export default async function OverviewPage() {
 
   return (
     <>
-      <PageHeader title={`${greet}, ${ws.fullName.split(' ')[0]}`} subtitle={`${dateLong()} · ${routeRows.length} routes · ${o.length} orders today`}>
+      <PageHeader title={`${greet}, ${ws.fullName.split(' ')[0]}`} subtitle={`${dateLong()} · ${routeRows.length} routes · ${newToday} new orders · ${o.length} due today`}>
         <Link href="/dispatch" className="btn-ghost">Open dispatch</Link>
       </PageHeader>
 
@@ -87,8 +92,8 @@ export default async function OverviewPage() {
       )}
 
       <StatStrip items={[
-        { label: 'Orders today', value: String(o.length), note: `${onRoute} on the road now`, tone: 'brand' },
-        { label: 'Delivered', value: String(delivered), note: o.length ? `${Math.round((delivered / o.length) * 100)}% of today` : 'Nothing delivered yet', tone: 'success' },
+        { label: 'New orders today', value: String(newToday), note: `${o.length} due for delivery today · ${onRoute} on the road`, tone: 'brand' },
+        { label: 'Delivered', value: String(delivered), note: o.length ? `${Math.round((delivered / o.length) * 100)}% of today's deliveries` : 'Nothing due today yet', tone: 'success' },
         { label: 'Problems', value: String(problems), note: problems ? 'Waiting in Helpdesk' : 'All clear', tone: 'warning' },
         { label: 'Cash collected', value: euro(codCollected, 0), note: `${euro(codWithDrivers, 0)} still with drivers`, tone: 'info' }
       ]} />
