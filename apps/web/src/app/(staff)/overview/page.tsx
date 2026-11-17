@@ -10,7 +10,7 @@ export const metadata = { title: 'Overview' };
 const TICKET_ICON: Record<string, IconName> = { no_answer: 'phone', wrong_address: 'pin', pod_review: 'camera', refused: 'undo', cash_difference: 'banknote' };
 
 export default async function OverviewPage() {
-  const ws = await requireStaff();
+  const ws = await requireStaff('/overview');
   const sb = await createClient();
   const org = ws.org.id;
   const today = todayKs();

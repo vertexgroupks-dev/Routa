@@ -5,7 +5,7 @@ import { time } from '@routa/shared';
 import { ActionButton } from '../_actions';
 export const metadata = { title: 'Proof of Delivery' };
 export default async function Page({ searchParams }: { searchParams: Promise<{ all?: string }> }) {
-  const sp = await searchParams; const ws = await requireStaff(); const sb = await createClient();
+  const sp = await searchParams; const ws = await requireStaff('/pod'); const sb = await createClient();
   let q = sb.from('pods').select('id, recipient_type, recipient_name, distance_to_address_m, review_status, delivered_at, order:orders(code, customer_name, address_line), driver:drivers(full_name)').eq('org_id', ws.org.id).order('delivered_at', { ascending: false }).limit(100);
   if (!sp.all) q = q.eq('review_status', 'flagged');
   const { data } = await q;

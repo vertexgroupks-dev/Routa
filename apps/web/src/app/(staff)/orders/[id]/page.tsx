@@ -9,7 +9,7 @@ import { OrderActions } from './OrderActions';
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const ws = await requireStaff();
+  const ws = await requireStaff('/orders');
   const supabase = await createClient();
   const { data: o } = await supabase
     .from('orders')

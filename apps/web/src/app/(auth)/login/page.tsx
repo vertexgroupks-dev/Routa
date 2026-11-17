@@ -62,7 +62,7 @@ function LoginForm() {
 }
 
 // Demo shortcuts — remove before a real customer uses Routa.
-const DEMO = [['owner', 'Owner'], ['dispatcher', 'Dispatcher'], ['frontdesk', 'Front desk'], ['finance', 'Finance'], ['helpdesk', 'Helpdesk'], ['warehouse', 'Warehouse'], ['merchant', 'Merchant']];
+const DEMO = [['owner', 'Owner'], ['dispatcher', 'Dispatcher'], ['frontdesk', 'Front desk'], ['finance', 'Finance'], ['helpdesk', 'Helpdesk'], ['warehouse', 'Warehouse'], ['hr', 'HR'], ['merchant', 'Merchant']];
 function DemoAccounts({ onPick }: { onPick: (email: string) => void }) {
   return (
     <div className="flex flex-col gap-2 rounded-[10px] border border-dashed border-brand bg-brand-tint p-3">

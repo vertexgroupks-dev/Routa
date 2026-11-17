@@ -9,7 +9,7 @@ export const metadata = { title: 'Helpdesk' };
 
 export default async function HelpdeskPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   const sp = await searchParams;
-  const ws = await requireStaff();
+  const ws = await requireStaff('/helpdesk');
   const supabase = await createClient();
   const show = sp.status === 'resolved' ? 'resolved' : 'open';
   let q = supabase.from('tickets').select('id, type, status, priority, title, description, created_at, order:orders(id, code, status, customer_name, customer_phone, address_line)').eq('org_id', ws.org.id).order('priority').order('created_at', { ascending: false }).limit(100);

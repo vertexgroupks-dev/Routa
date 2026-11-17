@@ -5,7 +5,7 @@ import { todayKs } from '@routa/shared';
 import { ActionButton } from '../_actions';
 export const metadata = { title: 'Pick & Pack' };
 export default async function Page() {
-  const ws = await requireStaff(); const sb = await createClient();
+  const ws = await requireStaff('/pick-pack'); const sb = await createClient();
   const [{ data: lists }, { data: toPack }] = await Promise.all([
     sb.from('pick_lists').select('id, status, dock, created_at, route:routes(code, date, driver:drivers(full_name)), items:pick_list_items(id)').eq('org_id', ws.org.id).order('created_at', { ascending: false }).limit(30),
     sb.from('orders').select('id, code, status, customer_name, merchant:merchants(name)').eq('org_id', ws.org.id).in('status', ['received']).gte('delivery_date', todayKs()).order('delivery_date').limit(60)

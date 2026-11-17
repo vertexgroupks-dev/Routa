@@ -1,0 +1,11 @@
+-- 021 role-based read access (applied via Supabase MCP on 2026-11-17)
+-- Adds private.role_set entries and narrows staff SELECT policies per role:
+--   orders_read : owner, admin, dispatcher, front_desk, helpdesk, warehouse, finance
+--     -> orders, order_items, order_events, delivery_attempts, returns
+--   routes_read : owner, admin, dispatcher, helpdesk, warehouse
+--     -> routes, route_stops, pods, pod_photos, optimization_runs, driver_positions
+--   stock_read  : owner, admin, dispatcher, warehouse
+--     -> pick_lists, pick_list_items, skus, stock_levels, stock_movements, inbound_shipments, inbound_lines, bins
+--   cash_read   : owner, admin, dispatcher, finance -> cod_collections
+--   tickets     : owner, admin, dispatcher, helpdesk
+-- HR reads only employees / payroll. Web app mirrors this in apps/web/src/lib/access.ts.

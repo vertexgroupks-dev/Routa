@@ -7,7 +7,7 @@ import { InviteForm, MemberRole, RevokeInvite } from './TeamActions';
 export const metadata = { title: 'Team & roles' };
 
 export default async function Page() {
-  const ws = await requireStaff();
+  const ws = await requireStaff('/team');
   const sb = await createClient();
   const [{ data: mem }, { data: invites }] = await Promise.all([
     sb.from('memberships').select('id, user_id, role, active, created_at').eq('org_id', ws.org.id).order('role'),

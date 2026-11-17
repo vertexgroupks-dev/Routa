@@ -15,7 +15,7 @@ const EMP_FIELDS: Field[] = [
 export const metadata = { title: 'HR & Payroll' };
 const SH: Record<string, string> = { morning: '#EEF0FF', afternoon: '#E9F3FF', full: '#E8F8EF', off: '#F0F2F7', leave: '#FFF4E5', sick: '#FDECEC' };
 export default async function Page() {
-  const ws = await requireStaff(); const sb = await createClient();
+  const ws = await requireStaff('/hr'); const sb = await createClient();
   const start = new Date(); start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
   const days = Array.from({ length: 6 }, (_, i) => { const d = new Date(start); d.setDate(start.getDate() + i); return d.toISOString().slice(0, 10); });
   const [{ data: emp }, { data: shifts }, { data: runs }] = await Promise.all([

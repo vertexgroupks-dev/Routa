@@ -9,7 +9,7 @@ const S: Record<string, [string, string, string]> = { active: ['Active', '#E8F8E
 const COLORS = ['#1D72D8', '#0F9F5F', '#DB2777', '#0891B2', '#D9740B', '#65A30D', '#7C3AED'];
 
 export default async function MerchantsPage() {
-  const ws = await requireStaff();
+  const ws = await requireStaff('/merchants');
   const supabase = await createClient();
   const month = todayKs().slice(0, 7) + '-01';
   const [{ data: merchants }, { data: orders }, { data: ledger }] = await Promise.all([

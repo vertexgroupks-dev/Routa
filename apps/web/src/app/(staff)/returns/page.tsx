@@ -4,7 +4,7 @@ import { PageHeader, Pill, Empty, StatCard, Avatar } from "@/components/ui";
 import { ScanBox } from '../_actions';
 export const metadata = { title: 'Returns' };
 export default async function Page() {
-  const ws = await requireStaff(); const sb = await createClient();
+  const ws = await requireStaff('/returns'); const sb = await createClient();
   const { data } = await sb.from('returns').select('id, reason, status, next_step, created_at, checked_in_at, order:orders(code, customer_name), merchant:merchants(name), driver:drivers(full_name)').eq('org_id', ws.org.id).order('created_at', { ascending: false }).limit(100);
   return (<>
     <PageHeader title="Returns check-in" subtitle="Parcels coming back from drivers. Scan or type the order code to check them in." />

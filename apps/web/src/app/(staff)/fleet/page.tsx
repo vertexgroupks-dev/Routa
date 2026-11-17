@@ -7,7 +7,7 @@ import { phonePretty } from '@routa/shared';
 export const metadata = { title: 'Fleet & Drivers' };
 
 export default async function FleetPage() {
-  const ws = await requireStaff();
+  const ws = await requireStaff('/fleet');
   const supabase = await createClient();
   const [{ data: drivers }, { data: vehicles }] = await Promise.all([
     supabase.from('drivers').select('id, full_name, phone, color, status, rating, licence_category, licence_expires, user_id, default_vehicle_id, vehicle:vehicles(plate, model)').eq('org_id', ws.org.id).order('full_name'),

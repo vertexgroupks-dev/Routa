@@ -7,13 +7,16 @@ import { Icon } from './Icon';
 import { LogoMark } from './Logo';
 import { Avatar } from './ui';
 import { NAV, type NavItem } from './nav';
+import { canSee } from '@/lib/access';
 
 type Props = { orgName: string; hubLabel: string; userName: string; role: string; counts: Record<string, number>; isDemo: boolean };
 
 export function Sidebar({ orgName, hubLabel, userName, role, counts, isDemo }: Props) {
   const path = usePathname();
+  const groups = NAV.map((g) => ({ ...g, items: g.items.filter((it) => canSee(role, it.href)) })).filter((g) => g.items.length > 0);
+  const single = groups.length <= 2;
   const isActive = (it: NavItem) => path === it.href || path.startsWith(it.href + '/');
-  const activeGroup = NAV.find((g) => g.items.some(isActive))?.key ?? 'today';
+  const activeGroup = groups.find((g) => g.items.some(isActive))?.key ?? 'today';
   const [open, setOpen] = useState<Record<string, boolean>>({ today: true });
   useEffect(() => {
     let saved: Record<string, boolean> = {};
@@ -32,8 +35,8 @@ export function Sidebar({ orgName, hubLabel, userName, role, counts, isDemo }: P
         </span>
       </div>
       <nav aria-label="Main" className="flex flex-1 flex-col gap-1 overflow-y-auto px-2.5 pb-2">
-        {NAV.map((g) => {
-          const isOpen = !!open[g.key];
+        {groups.map((g) => {
+          const isOpen = single || !!open[g.key];
           const groupCount = g.items.reduce((s, it) => s + (it.countKey ? counts[it.countKey] ?? 0 : 0), 0);
           return (
             <div key={g.key} className="flex flex-col">

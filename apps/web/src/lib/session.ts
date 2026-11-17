@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { canSee, homeForRole } from '@/lib/access';
 
 export type Workspace = {
   userId: string;
@@ -31,16 +32,18 @@ export const getWorkspace = cache(async (): Promise<Workspace | null> => {
 
 /** Where a signed-in user should land. */
 export function homeFor(ws: Workspace): string {
-  if (ws.role && ws.role !== 'driver') return '/overview';
+  if (ws.role && ws.role !== 'driver') return homeForRole(ws.role);
   if (ws.merchant) return '/merchant';
   if (ws.role === 'driver') return '/driver-app';
   return '/onboarding';
 }
 
-export async function requireStaff() {
+/** Signed-in office staff only. Pass the page path to also check that this role may open it. */
+export async function requireStaff(page?: string) {
   const ws = await getWorkspace();
   if (!ws) redirect('/login');
   if (!ws.role || ws.role === 'driver' || !ws.org) redirect(homeFor(ws));
+  if (page && !canSee(ws.role, page)) redirect(homeForRole(ws.role));
   return ws as Workspace & { org: NonNullable<Workspace['org']>; role: string };
 }
 

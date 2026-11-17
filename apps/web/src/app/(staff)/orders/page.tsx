@@ -10,7 +10,7 @@ const PAGE = 50;
 
 export default async function OrdersPage({ searchParams }: { searchParams: Promise<{ tab?: string; q?: string; page?: string; date?: string }> }) {
   const sp = await searchParams;
-  const ws = await requireStaff();
+  const ws = await requireStaff('/orders');
   const supabase = await createClient();
   const tab = ORDER_TABS.find((t) => t.key === sp.tab) ?? ORDER_TABS[0]!;
   const page = Math.max(1, Number(sp.page) || 1);

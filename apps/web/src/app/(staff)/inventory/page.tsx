@@ -5,7 +5,7 @@ import { AdjustStock } from "../inbound/ReceiveLine";
 import { RecordForm } from "@/components/RecordForm";
 export const metadata = { title: 'Inventory' };
 export default async function Page() {
-  const ws = await requireStaff(); const sb = await createClient();
+  const ws = await requireStaff('/inventory'); const sb = await createClient();
   const { data: merchants } = await sb.from('merchants').select('id, name').eq('org_id', ws.org.id).order('name');
   const { data } = await sb.from('stock_levels').select('id, on_hand, reserved, bin:bins(code), sku:skus(sku, name, low_stock_threshold, merchant:merchants(name))').eq('org_id', ws.org.id);
   const rows = (data ?? []) as any[];

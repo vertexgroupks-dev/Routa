@@ -6,7 +6,7 @@ import { NewOrderForm } from './NewOrderForm';
 export const metadata = { title: 'New order' };
 
 export default async function NewOrderPage() {
-  const ws = await requireStaff();
+  const ws = await requireStaff('/orders/new');
   const supabase = await createClient();
   const [{ data: merchants }, { data: zones }] = await Promise.all([
     supabase.from('merchants').select('id, name, code').eq('org_id', ws.org.id).eq('status', 'active').order('name'),

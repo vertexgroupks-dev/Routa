@@ -5,7 +5,7 @@ import { euro, todayKs } from '@routa/shared';
 import { CashCheckIn } from '../_actions';
 export const metadata = { title: 'Cash Check-in' };
 export default async function Page() {
-  const ws = await requireStaff(); const sb = await createClient();
+  const ws = await requireStaff('/cash-check-in'); const sb = await createClient();
   const { data } = await sb.from('cash_handovers').select('id, short_code, expected_amount, counted_amount, difference, status, confirmed_at, created_at, driver:drivers(full_name)').eq('org_id', ws.org.id).order('created_at', { ascending: false }).limit(50);
   return (<>
     <PageHeader title="Cash Check-in" subtitle="At the end of the shift the driver shows a 6-digit code. Type it, count the cash, confirm." />

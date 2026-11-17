@@ -9,7 +9,7 @@ import { RouteSettings, StopControls } from '../DispatchActions';
 
 export default async function RoutePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const ws = await requireStaff();
+  const ws = await requireStaff('/dispatch');
   const sb = await createClient();
   const { data: r } = await sb.from('routes').select('*, driver:drivers(id, full_name), vehicle:vehicles(id, plate, model, capacity_kg, fuel_l_per_100km), stops:route_stops(id, sequence, status, eta, order:orders(id, code, status, customer_name, address_line, cod_amount, weight_kg, zone:zones(name)))').eq('id', id).maybeSingle();
   if (!r) notFound();

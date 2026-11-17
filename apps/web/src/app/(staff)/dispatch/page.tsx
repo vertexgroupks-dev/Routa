@@ -14,7 +14,7 @@ const RS: Record<string, [string, string, string]> = {
 
 export default async function DispatchPage({ searchParams }: { searchParams: Promise<{ date?: string }> }) {
   const sp = await searchParams;
-  const ws = await requireStaff();
+  const ws = await requireStaff('/dispatch');
   const supabase = await createClient();
   const date = sp.date ?? todayKs();
   const [{ data: routes }, { count: unplanned }, { count: noPin }, { data: unassigned }, { data: drivers }] = await Promise.all([

@@ -4,7 +4,7 @@ import { PageHeader, Pill, Empty, StatCard, Avatar } from "@/components/ui";
 import { euro } from '@routa/shared';
 export const metadata = { title: 'Analytics' };
 export default async function Page() {
-  const ws = await requireStaff(); const sb = await createClient();
+  const ws = await requireStaff('/analytics'); const sb = await createClient();
   const from = new Date(Date.now() - 30 * 86400_000).toISOString().slice(0, 10);
   const { data } = await sb.from('orders').select('status, cod_amount, delivery_fee, weight_fee, cod_fee, merchant:merchants(name), zone:zones(name)').eq('org_id', ws.org.id).gte('delivery_date', from);
   const o = (data ?? []) as any[];

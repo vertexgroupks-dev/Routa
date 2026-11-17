@@ -6,7 +6,7 @@ import { ReceiveLine } from './ReceiveLine';
 export const metadata = { title: 'Inbound' };
 const S: Record<string, [string, string]> = { expected: ['#F0F2F7', '#5B6378'], in_transit: ['#E9F3FF', '#175CD3'], receiving: ['#FFF4E5', '#B54708'], received: ['#E8F8EF', '#067647'], cancelled: ['#FDECEC', '#B42318'] };
 export default async function Page() {
-  const ws = await requireStaff(); const sb = await createClient();
+  const ws = await requireStaff('/inbound'); const sb = await createClient();
   const { data: bins } = await sb.from('bins').select('id, code').eq('org_id', ws.org.id).order('code');
   const { data } = await sb.from('inbound_shipments').select('id, code, status, expected_at, arrived_at, packages, merchant:merchants(name), lines:inbound_lines(id, expected_qty, received_qty, damaged_qty, bin_id, sku:skus(sku, name))').eq('org_id', ws.org.id).order('expected_at', { ascending: false });
   return (<>

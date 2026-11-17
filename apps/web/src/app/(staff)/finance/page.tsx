@@ -9,7 +9,7 @@ export const metadata = { title: 'Finance & COD' };
 const PS: Record<string, [string, string]> = { draft: ['#F0F2F7', '#5B6378'], scheduled: ['#EEF0FF', '#3B38BF'], paid: ['#E8F8EF', '#067647'], on_hold: ['#FFF4E5', '#B54708'], issued: ['#EEF0FF', '#3B38BF'], void: ['#FDECEC', '#B42318'] };
 
 export default async function FinancePage() {
-  const ws = await requireStaff();
+  const ws = await requireStaff('/finance');
   const supabase = await createClient();
   const org = ws.org.id;
   const today = todayKs();

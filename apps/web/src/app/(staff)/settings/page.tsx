@@ -5,7 +5,7 @@ import { euro } from '@routa/shared';
 import { ZonePrice } from './ZonePrice';
 export const metadata = { title: 'Settings' };
 export default async function Page() {
-  const ws = await requireStaff(); const sb = await createClient();
+  const ws = await requireStaff('/settings'); const sb = await createClient();
   const { data: zones } = await sb.from('zones').select('id, name, color, base_fee, sla, cutoff_time, delivery_days, active').eq('org_id', ws.org.id).order('sort');
   const s = (ws.org.settings ?? {}) as Record<string, any>;
   return (<>
