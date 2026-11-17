@@ -40,7 +40,7 @@ export default async function MerchantsPage() {
       </PageHeader>
       <section className="card overflow-x-auto">
         <table className="w-full min-w-[820px] border-collapse text-[13px]">
-          <thead className="bg-[#FAFBFD]"><tr><th className="th pl-5">Merchant</th><th className="th">Service</th><th className="th text-right">Orders · this month</th><th className="th text-right">Success</th><th className="th text-right">Balance owed</th><th className="th">Pricing</th><th className="th">Status</th><th className="th pr-5"></th></tr></thead>
+          <thead className="bg-white/30"><tr><th className="th pl-5">Merchant</th><th className="th">Service</th><th className="th text-right">Orders · this month</th><th className="th text-right">Success</th><th className="th text-right">Balance owed</th><th className="th">Pricing</th><th className="th">Status</th><th className="th pr-5"></th></tr></thead>
           <tbody>{(merchants ?? []).map((m, i) => {
             const s = stat(m.id); const st = S[m.status] ?? S.active!; const p = (m.pricing ?? {}) as Record<string, number>;
             return (

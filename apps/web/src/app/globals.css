@@ -15,40 +15,88 @@
   --color-night-line: #232A42;
   --color-lime: #C8F25A;
   --color-ink: #0E1325;
-  --color-ink-2: #5B6378;
+  --color-ink-2: #4B5468;
   --color-ink-3: #6B7389;
   --color-muted: #9AA3BC;
-  --color-line: #E4E7EF;
-  --color-canvas: #F5F6FA;
-  --color-field: #F0F2F7;
+  /* translucent neutrals so lines and fills sit nicely on frosted glass */
+  --color-line: rgb(14 19 37 / 0.08);
+  --color-canvas: rgb(255 255 255 / 0.5);
+  --color-field: rgb(14 19 37 / 0.045);
   --color-success: #0F9F5F;
   --color-success-ink: #067647;
-  --color-success-tint: #E8F8EF;
+  --color-success-tint: #E3F6EC;
   --color-warning: #D9740B;
   --color-warning-ink: #B54708;
-  --color-warning-tint: #FFF4E5;
+  --color-warning-tint: #FFF2DF;
   --color-danger: #D92D2D;
   --color-danger-ink: #B42318;
-  --color-danger-tint: #FDECEC;
+  --color-danger-tint: #FDE9E9;
   --color-info: #1D72D8;
   --color-info-ink: #175CD3;
-  --color-info-tint: #E9F3FF;
+  --color-info-tint: #E6F0FD;
 }
 
-html, body { background: #FFFFFF; color: var(--color-ink); }
-body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+html, body { background: #EEF0F6; color: var(--color-ink); }
+body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; font-feature-settings: 'ss01', 'cv11'; }
 a { color: inherit; text-decoration: none; }
 .link { color: var(--color-brand-hover); font-weight: 500; }
 .link:hover { color: var(--color-brand-deep); }
+::selection { background: #DFE2FF; }
+
+/* Soft, colourful backdrop that shows through the glass panels (desktop dashboard). */
+.app-bg {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(900px 600px at 8% -10%, rgb(91 92 246 / 0.28), transparent 60%),
+    radial-gradient(700px 500px at 100% 0%, rgb(200 242 90 / 0.30), transparent 60%),
+    radial-gradient(800px 600px at 85% 100%, rgb(56 189 248 / 0.22), transparent 60%),
+    radial-gradient(700px 500px at 0% 100%, rgb(244 114 182 / 0.14), transparent 60%),
+    #EEF0F6;
+}
+.app-bg::after {
+  content: ''; position: absolute; inset: 0; opacity: 0.55;
+  background-image:
+    linear-gradient(rgb(14 19 37 / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(14 19 37 / 0.035) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse at 50% 30%, black 40%, transparent 85%);
+}
+
+/* Custom utilities (usable in @apply, Tailwind v4) */
+@utility glass {
+  border: 1px solid rgb(255 255 255 / 0.7);
+  background: rgb(255 255 255 / 0.55);
+  backdrop-filter: blur(40px) saturate(1.5);
+  -webkit-backdrop-filter: blur(40px) saturate(1.5);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7), 0 10px 30px -14px rgb(14 19 37 / 0.22);
+}
+@utility glass-soft {
+  border: 1px solid rgb(255 255 255 / 0.6);
+  background: rgb(255 255 255 / 0.35);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+@utility btn {
+  display: inline-flex; height: 2.25rem; align-items: center; justify-content: center; gap: 0.5rem;
+  border-radius: 0.75rem; padding-inline: 0.875rem; font-size: 13px; font-weight: 500; white-space: nowrap;
+  transition: all 150ms;
+  &:disabled { cursor: not-allowed; opacity: 0.5; }
+  &:active:not(:disabled) { transform: scale(0.98); }
+}
 
 @layer components {
-  .card { @apply rounded-[14px] border border-line bg-white; }
-  .btn { @apply inline-flex items-center justify-center gap-2 rounded-[10px] px-3.5 py-[9px] text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60; }
-  .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-[10px] px-3.5 py-[9px] text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 bg-brand text-white hover:bg-brand-hover; }
-  .btn-dark { @apply inline-flex items-center justify-center gap-2 rounded-[10px] px-3.5 py-[9px] text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 bg-night text-white hover:bg-night-3; }
-  .btn-ghost { @apply inline-flex items-center justify-center gap-2 rounded-[10px] px-3.5 py-[9px] text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 border border-line bg-white text-ink hover:bg-canvas; }
-  .input { @apply w-full rounded-[10px] border border-line bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-brand focus:ring-1 focus:ring-brand; }
-  .label { @apply flex flex-col gap-1.5 text-[13px] font-medium; }
-  .th { @apply px-2 py-2.5 text-left text-xs font-medium text-ink-3; }
+  .card { @apply glass rounded-2xl; }
+  .btn-primary { @apply btn bg-ink text-white shadow-[0_6px_16px_-8px_rgb(14_19_37/0.6)] hover:bg-black; }
+  .btn-dark { @apply btn bg-ink text-white shadow-[0_6px_16px_-8px_rgb(14_19_37/0.6)] hover:bg-black; }
+  .btn-brand { @apply btn bg-brand text-white hover:bg-brand-hover; }
+  .btn-ghost { @apply btn border border-white/80 bg-white/60 text-ink backdrop-blur hover:bg-white/90; }
+  .input { @apply w-full rounded-xl border border-white/80 bg-white/70 px-3 py-2.5 text-sm text-ink outline-none backdrop-blur transition placeholder:text-muted focus:border-brand/60 focus:bg-white focus:ring-4 focus:ring-brand/10; }
+  .label { @apply flex flex-col gap-1.5 text-[12.5px] font-medium text-ink-2; }
+  .th { @apply px-2 py-2.5 text-left text-[11.5px] font-medium tracking-wide text-ink-3 uppercase; }
   .td { @apply px-2 py-3 align-middle; }
+  .eyebrow { @apply font-mono text-[11px] font-medium tracking-[.08em] text-ink-3 uppercase; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass, .glass-soft { background: rgb(255 255 255 / 0.92); backdrop-filter: none; }
 }

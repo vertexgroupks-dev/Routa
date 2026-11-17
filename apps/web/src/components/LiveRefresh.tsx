@@ -3,20 +3,23 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
-const TABLES = ['orders', 'routes', 'route_stops', 'tickets', 'pods', 'cash_handovers', 'notifications'];
+const TABLES = ['orders', 'routes', 'tickets', 'cash_handovers', 'notifications'];
 
-/** Re-renders the current page whenever relevant rows change (Supabase Realtime), plus a 30 s safety refresh. */
+/** Re-renders the page when relevant rows change (Supabase Realtime). Debounced so bursts cause one refresh. */
 export function LiveRefresh() {
   const router = useRouter();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     const supabase = createClient();
-    const bump = () => { if (timer.current) clearTimeout(timer.current); timer.current = setTimeout(() => router.refresh(), 600); };
+    const bump = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => router.refresh(), 1500);
+    };
     let ch = supabase.channel(`live-${Math.random().toString(36).slice(2)}`);
     TABLES.forEach((t) => { ch = ch.on('postgres_changes', { event: '*', schema: 'public', table: t }, bump); });
     ch.subscribe();
-    const iv = setInterval(() => router.refresh(), 30_000);
-    return () => { supabase.removeChannel(ch); clearInterval(iv); };
+    return () => { if (timer.current) clearTimeout(timer.current); supabase.removeChannel(ch); };
   }, [router]);
   return null;
 }

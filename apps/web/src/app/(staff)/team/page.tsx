@@ -23,7 +23,7 @@ export default async function Page() {
       {(canManage || ws.role === 'hr') && <InviteForm orgId={ws.org.id} canInviteAll={canManage} />}
       <section className="card overflow-x-auto">
         <table className="w-full min-w-[620px] border-collapse text-[13px]">
-          <thead className="bg-[#FAFBFD]"><tr><th className="th pl-5">Person</th><th className="th">Role</th><th className="th">Since</th><th className="th pr-5">Status</th></tr></thead>
+          <thead className="bg-white/30"><tr><th className="th pl-5">Person</th><th className="th">Role</th><th className="th">Since</th><th className="th pr-5">Status</th></tr></thead>
           <tbody>{rows.map((m) => (
             <tr key={m.id} className="border-t border-line">
               <td className="td pl-5"><span className="flex items-center gap-2.5"><Avatar name={m.user?.full_name} size={28} /><span className="font-medium">{m.user?.full_name ?? '—'}{m.user_id === ws.userId && <span className="ml-1.5 text-xs text-ink-3">(you)</span>}</span></span></td>

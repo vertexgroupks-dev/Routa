@@ -31,14 +31,14 @@ export default async function DispatchPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <PageHeader title="Dispatch & Routes" subtitle={`${date} · ${routes?.length ?? 0} routes · ${unplanned ?? 0} orders not on a route · ${noPin ?? 0} need a map pin`}>
-        <form action="/dispatch" className="flex gap-2"><input type="date" name="date" defaultValue={date} className="input py-2" /><button className="btn-ghost">Go</button></form>
-        <NewRoute orgId={ws.org.id} date={date} drivers={(drivers ?? []).map((d) => ({ id: d.id, label: d.full_name }))} />
-        <Link href={`/labels?date=${date}`} target="_blank" className="btn-ghost">Print labels</Link>
+        <form action="/dispatch" className="flex gap-2"><input type="date" name="date" defaultValue={date} className="input h-9 w-auto py-0" /><button className="btn-ghost">Show</button></form>
         <PublishButton orgId={ws.org.id} date={date} drafts={drafts} />
       </PageHeader>
 
-      <div className="rounded-[14px] border border-dashed border-brand bg-brand-tint px-5 py-4 text-[13px] text-brand-deep">
-        <b>Automatic route optimisation</b> (VROOM + OSRM on the Kosovo road map) and the map arrive with the location stage. Until then: create routes, add orders, reorder stops and publish here — publishing assigns orders, notifies drivers and creates the pick lists.
+      <div className="flex flex-wrap items-center gap-3">
+        <h2 className="flex-1 text-[15px] font-semibold">Routes</h2>
+        <Link href={`/labels?date=${date}`} target="_blank" className="link text-[13px]">Print all labels</Link>
+        <NewRoute orgId={ws.org.id} date={date} drivers={(drivers ?? []).map((d) => ({ id: d.id, label: d.full_name }))} />
       </div>
 
       <section className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">

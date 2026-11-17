@@ -1,0 +1,4 @@
+-- 020 · Speed: public.my_workspace() returns user + company + role + hub + shop in one call;
+-- public.nav_counts(org) returns every sidebar/topbar badge in one call. (Full text in the Supabase migration history.)
+-- Also on 2026-11-17: demo example data cleared to zero (kept company, hub, zones, bins, templates, logins, merchant TechNova);
+-- cron job routa-demo-roll-forward removed.

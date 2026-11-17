@@ -1,6 +1,6 @@
 import { requireStaff } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
-import { PageHeader, StatCard, Pill, Empty } from '@/components/ui';
+import { PageHeader, StatCard, Pill, Empty, Accordion } from '@/components/ui';
 import { euro, todayKs } from '@routa/shared';
 import Link from 'next/link';
 import { MoneyRuns, MarkPaid } from './FinanceActions';
@@ -37,7 +37,6 @@ export default async function FinancePage() {
         <StatCard label="Balance owed to merchants" value={euro(owed, 0)} icon="store" tint="#EEF0FF" ink="#4A49E3" note="Ledger: COD in, fees out" />
         <StatCard label="Handovers today" value={String(handovers?.length ?? 0)} icon="check" tint="#E8F8EF" ink="#067647" note={`${(handovers ?? []).filter((h) => h.status === 'pending').length} waiting to be counted`} />
       </section>
-      <MoneyRuns orgId={ws.org.id} />
       <div className="flex flex-wrap items-start gap-4">
         <section className="card flex min-w-0 flex-[1_1_320px] flex-col gap-2.5 p-5 text-[13px]">
           <h2 className="text-base font-semibold">Cash per driver (not handed in)</h2>
@@ -49,6 +48,7 @@ export default async function FinancePage() {
           {[...balances.values()].sort((a, b) => b.amount - a.amount).map((b) => <span key={b.name} className="flex justify-between"><span>{b.name}</span><span className={`font-mono ${b.amount < 0 ? 'text-danger-ink' : ''}`}>{euro(b.amount)}</span></span>)}
         </section>
       </div>
+      <Accordion title="Run payouts & invoices" icon="bolt" meta="also automatic every Monday / 1st of month"><div className="p-1"><MoneyRuns orgId={ws.org.id} /></div></Accordion>
       <div className="flex flex-wrap items-start gap-4">
         <section className="card min-w-0 flex-[1_1_420px] overflow-x-auto">
           <h2 className="px-5 pt-5 text-base font-semibold">Payouts</h2>

@@ -41,7 +41,7 @@ export default async function FleetPage() {
       <div className="flex flex-wrap items-start gap-4">
         <section className="card min-w-0 flex-[3_1_560px] overflow-x-auto">
           <table className="w-full min-w-[680px] border-collapse text-[13px]">
-            <thead className="bg-[#FAFBFD]"><tr><th className="th pl-5">Driver</th><th className="th">Vehicle</th><th className="th">Licence</th><th className="th">App</th><th className="th">Status</th><th className="th pr-5"></th></tr></thead>
+            <thead className="bg-white/30"><tr><th className="th pl-5">Driver</th><th className="th">Vehicle</th><th className="th">Licence</th><th className="th">App</th><th className="th">Status</th><th className="th pr-5"></th></tr></thead>
             <tbody>{(drivers ?? []).map((d: any) => (
               <tr key={d.id} className="border-t border-line align-top">
                 <td className="td pl-5"><span className="flex items-center gap-2.5"><Avatar name={d.full_name} bg={d.color ?? '#DFE2FF'} ink="#fff" /><span className="flex flex-col"><span className="font-medium">{d.full_name}</span><span className="text-xs text-ink-3">{phonePretty(d.phone)} · ★ {d.rating ?? '—'}</span></span></span></td>

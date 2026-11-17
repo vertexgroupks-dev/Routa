@@ -2,162 +2,148 @@ import Link from 'next/link';
 import { requireStaff } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { Icon, type IconName } from '@/components/Icon';
-import { StatCard, PageHeader, Avatar, Empty } from '@/components/ui';
+import { PageHeader, StatStrip, Accordion, Avatar, Empty, SectionTitle } from '@/components/ui';
 import { dateLong, euro, todayKs, time, TICKET_TYPE, type TicketType } from '@routa/shared';
 
 export const metadata = { title: 'Overview' };
 
-const TICKET_ICON: Record<string, { icon: IconName; tint: string; ink: string; cta: string }> = {
-  no_answer: { icon: 'phone', tint: '#FFF4E5', ink: '#B54708', cta: 'Call' },
-  wrong_address: { icon: 'pin', tint: '#FDECEC', ink: '#B42318', cta: 'Fix pin' },
-  pod_review: { icon: 'camera', tint: '#EEF0FF', ink: '#4A49E3', cta: 'Review' },
-  refused: { icon: 'undo', tint: '#FDECEC', ink: '#B42318', cta: 'Open' },
-  cash_difference: { icon: 'banknote', tint: '#FFF4E5', ink: '#B54708', cta: 'Check' }
-};
-const TINTS = [['#EEF0FF', '#3B38BF'], ['#E8F8EF', '#067647'], ['#FFF4E5', '#B54708'], ['#E9F3FF', '#175CD3'], ['#F3EEFF', '#5B21B6']];
+const TICKET_ICON: Record<string, IconName> = { no_answer: 'phone', wrong_address: 'pin', pod_review: 'camera', refused: 'undo', cash_difference: 'banknote' };
 
 export default async function OverviewPage() {
   const ws = await requireStaff();
-  const supabase = await createClient();
+  const sb = await createClient();
   const org = ws.org.id;
   const today = todayKs();
   const weekAgo = new Date(Date.now() - 6 * 86400_000).toLocaleDateString('en-CA', { timeZone: 'Europe/Belgrade' });
+  const head = { count: 'exact' as const, head: true };
 
-  const [{ data: todayOrders }, { data: week }, { data: routes }, { data: tickets }, { data: cod }] = await Promise.all([
-    supabase.from('orders').select('status, cod_amount, cod_status').eq('org_id', org).eq('delivery_date', today),
-    supabase.from('orders').select('status, delivery_date').eq('org_id', org).gte('delivery_date', weekAgo).lte('delivery_date', today).in('status', ['delivered', 'failed_attempt', 'rescheduled', 'returning', 'returned_to_hub', 'returned_to_merchant']),
-    supabase.from('routes').select('id, code, color, status, driver:drivers(full_name, rating), stops:route_stops(status, eta, order:orders(zone:zones(name)))').eq('org_id', org).eq('date', today).order('code'),
-    supabase.from('tickets').select('id, type, title, description, created_at').eq('org_id', org).neq('status', 'resolved').order('priority').order('created_at', { ascending: false }).limit(4),
-    supabase.from('cod_collections').select('amount, handover_id').eq('org_id', org).gte('collected_at', `${today}T00:00:00`)
+  const [{ data: todayOrders }, { data: week }, { data: routes }, { data: tickets }, { data: cod }, m, d, v, mem, all, waiting] = await Promise.all([
+    sb.from('orders').select('status').eq('org_id', org).eq('delivery_date', today),
+    sb.from('orders').select('status, delivery_date').eq('org_id', org).gte('delivery_date', weekAgo).lte('delivery_date', today).in('status', ['delivered', 'failed_attempt', 'rescheduled', 'returning', 'returned_to_hub', 'returned_to_merchant']),
+    sb.from('routes').select('id, code, color, status, driver:drivers(full_name), stops:route_stops(status, eta)').eq('org_id', org).eq('date', today).order('code'),
+    sb.from('tickets').select('id, type, title, description').eq('org_id', org).neq('status', 'resolved').order('priority').order('created_at', { ascending: false }).limit(5),
+    sb.from('cod_collections').select('amount, handover_id').eq('org_id', org).gte('collected_at', `${today}T00:00:00`),
+    sb.from('merchants').select('id', head).eq('org_id', org),
+    sb.from('drivers').select('id', head).eq('org_id', org),
+    sb.from('vehicles').select('id', head).eq('org_id', org),
+    sb.from('memberships').select('id', head).eq('org_id', org),
+    sb.from('orders').select('id', head).eq('org_id', org),
+    sb.from('orders').select('id', head).eq('org_id', org).in('status', ['confirmed', 'received', 'packed']).lte('delivery_date', today)
   ]);
 
   const o = todayOrders ?? [];
   const delivered = o.filter((x) => x.status === 'delivered').length;
-  const failed = o.filter((x) => ['failed_attempt', 'rescheduled'].includes(x.status)).length;
+  const problems = o.filter((x) => ['failed_attempt', 'rescheduled'].includes(x.status)).length;
   const onRoute = o.filter((x) => ['assigned', 'out_for_delivery'].includes(x.status)).length;
   const codCollected = (cod ?? []).reduce((s, c) => s + Number(c.amount), 0);
   const codWithDrivers = (cod ?? []).filter((c) => !c.handover_id).reduce((s, c) => s + Number(c.amount), 0);
 
-  const days = Array.from({ length: 7 }, (_, i) => new Date(Date.now() - (6 - i) * 86400_000).toLocaleDateString('en-CA', { timeZone: 'Europe/Belgrade' }));
-  const bars = days.map((d) => {
-    const rows = (week ?? []).filter((w) => w.delivery_date === d);
-    return { d, delivered: rows.filter((r) => r.status === 'delivered').length, failed: rows.length - rows.filter((r) => r.status === 'delivered').length };
-  });
-  const max = Math.max(10, ...bars.map((b) => b.delivered + b.failed));
-  const wkDelivered = bars.reduce((s, b) => s + b.delivered, 0);
-  const wkFailed = bars.reduce((s, b) => s + b.failed, 0);
+  const steps = [
+    { done: (m.count ?? 0) > 0, title: 'Add your first merchant', body: 'The shops you deliver for, with their prices.', href: '/merchants', icon: 'store' as IconName },
+    { done: (v.count ?? 0) > 0, title: 'Add a vehicle', body: 'Plate, capacity and fuel use.', href: '/fleet', icon: 'truck' as IconName },
+    { done: (d.count ?? 0) > 0, title: 'Add a driver', body: 'Then invite them to the driver app.', href: '/fleet', icon: 'users' as IconName },
+    { done: (mem.count ?? 0) > 1, title: 'Invite your team', body: 'Dispatcher, warehouse, finance…', href: '/team', icon: 'team' as IconName },
+    { done: (all.count ?? 0) > 0, title: 'Create the first order', body: 'Or let a merchant import a CSV.', href: '/orders/new', icon: 'package' as IconName },
+    { done: (routes ?? []).length > 0, title: 'Plan and publish a route', body: 'Drivers see it in their app instantly.', href: '/dispatch', icon: 'route' as IconName }
+  ];
+  const doneSteps = steps.filter((s) => s.done).length;
 
-  const routeRows = (routes ?? []).map((r: any, i: number) => {
+  const days = Array.from({ length: 7 }, (_, i) => new Date(Date.now() - (6 - i) * 86400_000).toLocaleDateString('en-CA', { timeZone: 'Europe/Belgrade' }));
+  const bars = days.map((day) => { const rows = (week ?? []).filter((w) => w.delivery_date === day); const ok = rows.filter((r) => r.status === 'delivered').length; return { day, ok, bad: rows.length - ok }; });
+  const max = Math.max(5, ...bars.map((b) => b.ok + b.bad));
+
+  const routeRows = ((routes ?? []) as any[]).map((r) => {
     const stops = r.stops ?? [];
     const done = stops.filter((s: any) => ['delivered', 'failed', 'skipped'].includes(s.status)).length;
     const lastEta = stops.map((s: any) => s.eta).filter(Boolean).sort().pop();
-    const zones = [...new Set(stops.map((s: any) => s.order?.zone?.name).filter(Boolean))].slice(0, 2).join(', ');
-    return { ...r, done, total: stops.length, pct: stops.length ? Math.round((done / stops.length) * 100) : 0, lastEta, zones, tint: TINTS[i % 5] };
+    return { ...r, done, total: stops.length, pct: stops.length ? Math.round((done / stops.length) * 100) : 0, lastEta };
   });
-  const drivers = [...routeRows].sort((a, b) => b.done - a.done).slice(0, 5);
   const hour = Number(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', timeZone: 'Europe/Belgrade' }));
   const greet = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
   return (
     <>
-      <PageHeader title={`${greet}, ${ws.fullName.split(' ')[0]}`} subtitle={`${dateLong()} · ${routeRows.length} routes today · ${o.length} orders`}>
-        <Link href="/orders" className="btn-ghost"><Icon name="calendar" size={16} color="#5B6378" />Today</Link>
-        <Link href="/dispatch" className="btn-dark"><Icon name="bolt" size={16} color="#C8F25A" />Plan tomorrow’s routes</Link>
+      <PageHeader title={`${greet}, ${ws.fullName.split(' ')[0]}`} subtitle={`${dateLong()} · ${routeRows.length} routes · ${o.length} orders today`}>
+        <Link href="/dispatch" className="btn-ghost">Open dispatch</Link>
       </PageHeader>
 
-      <section aria-label="Key metrics" className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
-        <StatCard label="Orders today" value={String(o.length)} note={`${onRoute} on routes right now`} icon="package" tint="#EEF0FF" ink="#4A49E3" />
-        <StatCard label="Delivered" value={String(delivered)} delta={{ text: o.length ? `${Math.round((delivered / o.length) * 100)}%` : '0%', bg: '#E8F8EF', ink: '#067647' }} note={`${onRoute} still on routes · ${failed} failed`} icon="check" tint="#E8F8EF" ink="#067647" />
-        <StatCard label="Failed / no answer" value={String(failed)} delta={{ text: o.length ? `${((failed / o.length) * 100).toFixed(1)}%` : '0%', bg: '#FFF4E5', ink: '#B54708' }} note="Go to Helpdesk to call back or reschedule" icon="alert" tint="#FFF4E5" ink="#B54708" />
-        <StatCard label="COD collected" value={euro(codCollected, 0)} note={`${euro(codWithDrivers, 0)} still with drivers`} icon="banknote" tint="#E9F3FF" ink="#175CD3" />
-      </section>
-
-      <div className="flex flex-wrap gap-4">
-        <section className="card flex min-w-0 flex-[2_1_520px] flex-col gap-4 p-5">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex flex-1 flex-col gap-0.5">
-              <h2 className="text-base font-semibold">Deliveries · last 7 days</h2>
-              <span className="text-[13px] text-ink-3">{wkDelivered} delivered · {wkFailed} failed · {wkDelivered + wkFailed ? ((wkDelivered / (wkDelivered + wkFailed)) * 100).toFixed(1) : '0'}% success</span>
-            </div>
-            <span className="flex gap-3.5 text-xs text-ink-2">
-              <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-[3px] bg-brand" />Delivered</span>
-              <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-[3px] bg-[#F59E0B]" />Failed</span>
-            </span>
+      {doneSteps < steps.length && (
+        <section className="card overflow-hidden">
+          <div className="flex flex-wrap items-center gap-4 px-5 pb-3 pt-5">
+            <div className="flex flex-1 flex-col gap-1"><span className="eyebrow">Get started</span><h2 className="text-[17px] font-semibold tracking-[-0.3px]">Set up {ws.org.name} in six steps</h2></div>
+            <span className="text-[13px] text-ink-3">{doneSteps} of {steps.length} done</span>
+            <span className="h-1.5 w-40 overflow-hidden rounded-full bg-ink/[.06]"><span className="block h-full rounded-full bg-brand" style={{ width: `${(doneSteps / steps.length) * 100}%` }} /></span>
           </div>
-          <div className="grid h-[220px] grid-cols-7 items-end gap-3.5 border-b border-line pt-2">
-            {bars.map((b, i) => (
-              <div key={b.d} className="flex h-full flex-col items-center justify-end gap-1.5">
-                <span className="font-mono text-[11px] text-ink-2">{b.delivered + b.failed}</span>
-                <div className="flex w-full max-w-11 flex-col gap-0.5">
-                  {b.failed > 0 && <span className="rounded-t bg-[#F59E0B]" style={{ height: Math.round((b.failed / max) * 170) + 2 }} />}
-                  <span className={b.failed > 0 ? 'rounded-b' : 'rounded'} style={{ height: Math.round((b.delivered / max) * 170), background: i === 6 ? '#0B0F1E' : '#5B5CF6' }} />
-                </div>
-              </div>
+          <div className="grid gap-2 p-3 sm:grid-cols-2 xl:grid-cols-3">
+            {steps.map((s, i) => (
+              <Link key={s.title} href={s.href} className={`group flex items-start gap-3 rounded-2xl p-3.5 transition ${s.done ? 'opacity-60' : 'bg-white/50 hover:bg-white/90'}`}>
+                <span className={`flex h-8 w-8 flex-none items-center justify-center rounded-xl ${s.done ? 'bg-success text-white' : 'bg-ink text-lime'}`}><Icon name={s.done ? 'check' : s.icon} size={15} color="currentColor" strokeWidth={s.done ? 2.4 : 1.75} /></span>
+                <span className="flex flex-1 flex-col"><span className={`text-[13.5px] font-medium ${s.done ? 'line-through' : ''}`}>{i + 1}. {s.title}</span><span className="text-[12.5px] text-ink-3">{s.body}</span></span>
+                {!s.done && <Icon name="chevronRight" size={15} color="#9AA3BC" className="mt-2 transition group-hover:translate-x-0.5" />}
+              </Link>
             ))}
           </div>
-          <div className="-mt-2 grid grid-cols-7 gap-3.5">
-            {bars.map((b, i) => <span key={b.d} className="text-center text-xs text-ink-3">{i === 6 ? 'Today' : new Date(b.d).toLocaleDateString('en-GB', { weekday: 'short' })}</span>)}
+        </section>
+      )}
+
+      <StatStrip items={[
+        { label: 'Orders today', value: String(o.length), note: `${onRoute} on the road now`, tone: 'brand' },
+        { label: 'Delivered', value: String(delivered), note: o.length ? `${Math.round((delivered / o.length) * 100)}% of today` : 'Nothing delivered yet', tone: 'success' },
+        { label: 'Problems', value: String(problems), note: problems ? 'Waiting in Helpdesk' : 'All clear', tone: 'warning' },
+        { label: 'Cash collected', value: euro(codCollected, 0), note: `${euro(codWithDrivers, 0)} still with drivers`, tone: 'info' }
+      ]} />
+
+      <div className="grid items-start gap-5 xl:grid-cols-3">
+        <section className="card flex flex-col gap-4 p-5 xl:col-span-2">
+          <SectionTitle title="Live routes" action={<Link href="/dispatch" className="link text-[13px]">Dispatch →</Link>} />
+          {routeRows.length === 0 && <Empty icon="route" title="No routes today" body="Add orders, then create and publish routes in Dispatch." action={<Link href="/dispatch" className="btn-primary mt-2">Plan routes</Link>} />}
+          <div className="flex flex-col gap-1">
+            {routeRows.map((r) => (
+              <Link key={r.id} href={`/dispatch/${r.id}`} className="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-xl px-2 py-2.5 hover:bg-white/50">
+                <Avatar name={r.driver?.full_name} bg={`${r.color ?? '#5B5CF6'}22`} ink={r.color ?? '#5B5CF6'} />
+                <span className="flex min-w-0 flex-col gap-1.5">
+                  <span className="flex items-center gap-2 text-[13.5px]"><span className="font-medium">{r.driver?.full_name ?? 'No driver'}</span><span className="font-mono text-[12px] text-ink-3">{r.code}</span></span>
+                  <span className="flex h-1.5 overflow-hidden rounded-full bg-ink/[.06]"><span className="rounded-full" style={{ width: `${r.pct}%`, background: r.color ?? '#5B5CF6' }} /></span>
+                </span>
+                <span className="flex flex-col items-end text-[12.5px]"><span className="font-mono font-medium">{r.done}/{r.total}</span><span className="text-ink-3">{r.pct === 100 ? 'done' : `ends ${time(r.lastEta)}`}</span></span>
+              </Link>
+            ))}
           </div>
         </section>
 
-        <section className="card flex min-w-0 flex-[1_1_320px] flex-col gap-3.5 p-5">
-          <div className="flex items-center"><h2 className="flex-1 text-base font-semibold">Route progress</h2><Link href="/dispatch" className="link text-[13px]">All routes →</Link></div>
-          {routeRows.length === 0 && <Empty title="No routes today" body="Plan and publish routes from Dispatch." />}
-          {routeRows.map((r) => (
-            <div key={r.id} className="flex flex-col gap-2">
-              <div className="flex items-center gap-2.5">
-                <Avatar name={r.driver?.full_name} bg={r.tint[0]} ink={r.tint[1]} />
-                <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate text-[13px] font-medium">{r.driver?.full_name ?? 'Unassigned'} · {r.code}</span>
-                  <span className="truncate text-xs text-ink-3">{r.zones || '—'} · {r.pct === 100 ? 'returning to hub' : `ETA ${time(r.lastEta)}`}</span>
-                </span>
-                <span className="font-mono text-[13px] text-ink-2">{r.done}/{r.total}</span>
+        <div className="flex flex-col gap-5">
+          <section className="card flex flex-col gap-3 p-5">
+            <SectionTitle title="Needs attention" action={<Link href="/helpdesk" className="link text-[13px]">Helpdesk →</Link>} />
+            {(tickets ?? []).length === 0 && <p className="py-4 text-center text-[13px] text-ink-3">Nothing waiting. 👌</p>}
+            {(tickets ?? []).map((t) => (
+              <Link key={t.id} href="/helpdesk" className="flex gap-3 rounded-xl p-2 hover:bg-white/50">
+                <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-warning-tint"><Icon name={TICKET_ICON[t.type] ?? 'alert'} size={15} color="#B54708" /></span>
+                <span className="flex min-w-0 flex-col"><span className="truncate text-[13px] font-medium">{t.title}</span><span className="truncate text-[12px] text-ink-3">{TICKET_TYPE[t.type as TicketType]} · {t.description}</span></span>
+              </Link>
+            ))}
+          </section>
+          <section className="card flex flex-col gap-2 p-5">
+            <SectionTitle title="Up next" />
+            <Link href="/dispatch" className="flex items-center justify-between rounded-xl bg-white/50 px-3 py-2.5 text-[13px] hover:bg-white/80"><span>Orders waiting for a route</span><span className="font-mono font-semibold">{waiting.count ?? 0}</span></Link>
+            <Link href="/cash-check-in" className="flex items-center justify-between rounded-xl bg-white/50 px-3 py-2.5 text-[13px] hover:bg-white/80"><span>Cash still with drivers</span><span className="font-mono font-semibold">{euro(codWithDrivers, 0)}</span></Link>
+          </section>
+        </div>
+      </div>
+
+      <Accordion title="Last 7 days" icon="chart" meta={`${bars.reduce((s, b) => s + b.ok, 0)} delivered · ${bars.reduce((s, b) => s + b.bad, 0)} not delivered`}>
+        <div className="grid h-[200px] grid-cols-7 items-end gap-4 px-6 pb-2 pt-6">
+          {bars.map((b, i) => (
+            <div key={b.day} className="flex h-full flex-col items-center justify-end gap-1">
+              <span className="font-mono text-[11px] text-ink-3">{b.ok + b.bad || ''}</span>
+              <div className="flex w-full max-w-10 flex-col gap-0.5">
+                {b.bad > 0 && <span className="rounded-t-md bg-warning/80" style={{ height: Math.round((b.bad / max) * 140) + 2 }} />}
+                <span className={b.bad ? 'rounded-b-md' : 'rounded-md'} style={{ height: Math.max(2, Math.round((b.ok / max) * 140)), background: i === 6 ? '#0E1325' : '#5B5CF6' }} />
               </div>
-              <span className="flex h-1.5 overflow-hidden rounded-[3px] bg-field"><span className="rounded-[3px]" style={{ width: `${r.pct}%`, background: r.color ?? '#5B5CF6' }} /></span>
             </div>
           ))}
-        </section>
-      </div>
-
-      <div className="flex flex-wrap gap-4">
-        <section className="card flex min-w-0 flex-[1_1_380px] flex-col gap-3.5 p-5">
-          <div className="flex items-center gap-2">
-            <h2 className="flex-1 text-base font-semibold">Needs attention</h2>
-            <span className="rounded-full bg-danger-tint px-2 py-0.5 text-xs font-medium text-danger-ink">{tickets?.length ?? 0} open</span>
-          </div>
-          {(tickets ?? []).length === 0 && <Empty title="All clear" body="No open problems right now." />}
-          {(tickets ?? []).map((t) => {
-            const m = TICKET_ICON[t.type] ?? { icon: 'alert' as IconName, tint: '#F0F2F7', ink: '#5B6378', cta: 'Open' };
-            return (
-              <div key={t.id} className="flex gap-3 rounded-xl border border-line p-3">
-                <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg" style={{ background: m.tint }}><Icon name={m.icon} size={16} color={m.ink} /></span>
-                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="text-[13px] font-medium">{t.title}</span>
-                  <span className="text-xs text-ink-3">{TICKET_TYPE[t.type as TicketType]} · {t.description}</span>
-                </span>
-                <Link href="/helpdesk" className="link self-center text-[13px]">{m.cta}</Link>
-              </div>
-            );
-          })}
-        </section>
-
-        <section className="card flex min-w-0 flex-[1_1_380px] flex-col gap-3.5 p-5">
-          <h2 className="text-base font-semibold">Drivers today</h2>
-          <table className="w-full border-collapse text-[13px]">
-            <thead><tr className="text-left text-xs text-ink-3"><th className="pb-2.5 font-medium">Driver</th><th className="pb-2.5 text-right font-medium">Stops done</th><th className="pb-2.5 text-right font-medium">Progress</th><th className="pb-2.5 text-right font-medium">Rating</th></tr></thead>
-            <tbody>
-              {drivers.map((d, i) => (
-                <tr key={d.id} className="border-t border-line">
-                  <td className="py-2.5"><span className="flex items-center gap-2.5"><span className="w-3.5 font-mono text-ink-3">{i + 1}</span><span className="font-medium">{d.driver?.full_name ?? '—'}</span></span></td>
-                  <td className="py-2.5 text-right font-mono">{d.done}</td>
-                  <td className="py-2.5 text-right font-mono">{d.pct}%</td>
-                  <td className="py-2.5 text-right">★ {d.driver?.rating ?? '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
-      </div>
+        </div>
+        <div className="grid grid-cols-7 gap-4 px-6 pb-5">{bars.map((b, i) => <span key={b.day} className="text-center text-[11.5px] text-ink-3">{i === 6 ? 'Today' : new Date(b.day).toLocaleDateString('en-GB', { weekday: 'short' })}</span>)}</div>
+      </Accordion>
     </>
   );
 }

@@ -1,39 +1,47 @@
 import type { IconName } from './Icon';
 
-export type NavItem = { label: string; href: string; icon: IconName; countKey?: string; stage?: string };
-export const NAV: { label: string; items: NavItem[] }[] = [
-  { label: 'OPERATIONS', items: [
-    { label: 'Overview', href: '/overview', icon: 'dashboard' },
-    { label: 'Orders', href: '/orders', icon: 'package', countKey: 'orders' },
-    { label: 'Dispatch & Routes', href: '/dispatch', icon: 'route' },
-    { label: 'Live Map', href: '/live-map', icon: 'map', stage: 'Stage 6 · Live ops' },
-    { label: 'Fleet & Drivers', href: '/fleet', icon: 'truck' }
+export type NavItem = { label: string; href: string; icon: IconName; countKey?: string; stage?: string; hint?: string };
+export type NavGroup = { key: string; label: string; icon: IconName; items: NavItem[] };
+
+// Ordered by how a day runs: plan & deliver → warehouse → money → partners → company.
+export const NAV: NavGroup[] = [
+  { key: 'today', label: 'Operations', icon: 'bolt', items: [
+    { label: 'Overview', href: '/overview', icon: 'dashboard', hint: 'Today at a glance' },
+    { label: 'Orders', href: '/orders', icon: 'package', countKey: 'orders', hint: 'Every parcel' },
+    { label: 'Dispatch', href: '/dispatch', icon: 'route', hint: 'Plan and publish routes' },
+    { label: 'Live map', href: '/live-map', icon: 'map', stage: 'the maps stage', hint: 'Drivers on the road' },
+    { label: 'Helpdesk', href: '/helpdesk', icon: 'headset', countKey: 'tickets', hint: 'Problems to solve' },
+    { label: 'Proof of delivery', href: '/pod', icon: 'camera', countKey: 'pod', hint: 'Review flagged drops' }
   ] },
-  { label: 'WAREHOUSE', items: [
-    { label: 'Inventory', href: '/inventory', icon: 'warehouse' },
-    { label: 'Inbound', href: '/inbound', icon: 'download', countKey: 'inbound' },
-    { label: 'Pick & Pack', href: '/pick-pack', icon: 'scan' },
-    { label: 'Returns', href: '/returns', icon: 'undo', countKey: 'returns' }
+  { key: 'warehouse', label: 'Warehouse', icon: 'warehouse', items: [
+    { label: 'Inbound', href: '/inbound', icon: 'download', countKey: 'inbound', hint: 'Stock arriving' },
+    { label: 'Inventory', href: '/inventory', icon: 'warehouse', hint: 'Stock by product' },
+    { label: 'Pick & pack', href: '/pick-pack', icon: 'scan', hint: 'Prepare parcels' },
+    { label: 'Returns', href: '/returns', icon: 'undo', countKey: 'returns', hint: 'Parcels coming back' }
   ] },
-  { label: 'SUPPORT', items: [
-    { label: 'Helpdesk', href: '/helpdesk', icon: 'headset', countKey: 'tickets' },
-    { label: 'Proof of Delivery', href: '/pod', icon: 'camera' }
+  { key: 'money', label: 'Money', icon: 'wallet', items: [
+    { label: 'Cash check-in', href: '/cash-check-in', icon: 'banknote', countKey: 'cash', hint: 'End-of-shift cash' },
+    { label: 'Finance & COD', href: '/finance', icon: 'wallet', hint: 'Balances, payouts, invoices' }
   ] },
-  { label: 'BUSINESS', items: [
-    { label: 'Finance & COD', href: '/finance', icon: 'wallet' },
-    { label: 'Cash Check-in', href: '/cash-check-in', icon: 'banknote', countKey: 'cash' },
-    { label: 'Merchants', href: '/merchants', icon: 'store' },
-    { label: 'HR & Payroll', href: '/hr', icon: 'users' },
-    { label: 'Analytics', href: '/analytics', icon: 'chart' }
+  { key: 'network', label: 'Network', icon: 'store', items: [
+    { label: 'Merchants', href: '/merchants', icon: 'store', hint: 'Shops you deliver for' },
+    { label: 'Fleet & drivers', href: '/fleet', icon: 'truck', hint: 'Drivers and vehicles' }
+  ] },
+  { key: 'company', label: 'Company', icon: 'users', items: [
+    { label: 'People & payroll', href: '/hr', icon: 'users', hint: 'Staff, shifts, pay' },
+    { label: 'Team & roles', href: '/team', icon: 'team', hint: 'Logins and permissions' },
+    { label: 'Analytics', href: '/analytics', icon: 'chart', hint: 'Last 30 days' },
+    { label: 'Settings', href: '/settings', icon: 'settings', hint: 'Zones and prices' }
   ] }
 ];
-export const NAV_FOOTER: NavItem[] = [
-  { label: 'Team & roles', href: '/team', icon: 'team' },
-  { label: 'Settings', href: '/settings', icon: 'settings' }
+export const NAV_FOOTER: NavItem[] = [];
+export const EXTRA: NavItem[] = [
+  { label: 'Notifications', href: '/notifications', icon: 'bell' },
+  { label: 'New order', href: '/orders/new', icon: 'plus' }
 ];
 
 export function findNav(path: string): { section: string; item: NavItem } | null {
-  for (const g of NAV) for (const it of g.items) if (path === it.href || path.startsWith(it.href + '/')) return { section: g.label[0] + g.label.slice(1).toLowerCase(), item: it };
-  for (const it of NAV_FOOTER) if (path.startsWith(it.href)) return { section: 'Workspace', item: it };
+  for (const it of EXTRA) if (path === it.href) return { section: 'Operations', item: it };
+  for (const g of NAV) for (const it of g.items) if (path === it.href || path.startsWith(it.href + '/')) return { section: g.label, item: it };
   return null;
 }

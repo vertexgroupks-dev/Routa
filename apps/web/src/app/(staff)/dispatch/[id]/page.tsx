@@ -43,7 +43,7 @@ export default async function RoutePage({ params }: { params: Promise<{ id: stri
       {canEdit && <section className="card p-5"><RouteSettings routeId={r.id} driverId={r.driver_id} vehicleId={r.vehicle_id} isDraft={r.status === 'draft'} drivers={(drivers ?? []).map((d) => ({ id: d.id, label: d.full_name }))} vehicles={(vehicles ?? []).map((v) => ({ id: v.id, label: `${v.plate} · ${v.model}` }))} /></section>}
       <section className="card overflow-x-auto">
         <table className="w-full min-w-[900px] border-collapse text-[13px]">
-          <thead className="bg-[#FAFBFD]"><tr><th className="th pl-5">#</th><th className="th">Order</th><th className="th">Customer · address</th><th className="th">Zone</th><th className="th text-right">COD</th><th className="th">Stop</th><th className="th">ETA</th><th className="th pr-5 text-right"></th></tr></thead>
+          <thead className="bg-white/30"><tr><th className="th pl-5">#</th><th className="th">Order</th><th className="th">Customer · address</th><th className="th">Zone</th><th className="th text-right">COD</th><th className="th">Stop</th><th className="th">ETA</th><th className="th pr-5 text-right"></th></tr></thead>
           <tbody>{stops.map((s, i) => (
             <tr key={s.id} className="border-t border-line">
               <td className="td pl-5 font-mono font-semibold">{s.sequence}</td>

@@ -17,7 +17,7 @@ export default async function MerchantOrders({ searchParams }: { searchParams: P
       <MerchantNewOrder orgId={ws.merchant.org_id} merchantId={ws.merchant.id} open={sp.new === '1'} />
       <section className="card overflow-x-auto">
         <table className="w-full min-w-[860px] border-collapse text-[13px]">
-          <thead className="bg-[#FAFBFD]"><tr><th className="th pl-5">Order</th><th className="th">Customer</th><th className="th">Address</th><th className="th">Date</th><th className="th text-right">COD</th><th className="th text-right">Fees</th><th className="th">Status</th><th className="th pr-5">Tracking</th></tr></thead>
+          <thead className="bg-white/30"><tr><th className="th pl-5">Order</th><th className="th">Customer</th><th className="th">Address</th><th className="th">Date</th><th className="th text-right">COD</th><th className="th text-right">Fees</th><th className="th">Status</th><th className="th pr-5">Tracking</th></tr></thead>
           <tbody>{(orders ?? []).map((o) => (
             <tr key={o.id} className="border-t border-line">
               <td className="td pl-5 font-mono font-medium">{o.code}</td>

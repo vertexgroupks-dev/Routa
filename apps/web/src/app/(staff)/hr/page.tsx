@@ -1,8 +1,17 @@
 import { requireStaff } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
-import { PageHeader, Pill, Empty, StatCard, Avatar } from "@/components/ui";
+import { PageHeader, Pill, Empty, StatCard, Avatar, Accordion } from "@/components/ui";
+import { RecordForm, type Field } from "@/components/RecordForm";
 import { euro, phonePretty } from '@routa/shared';
 import { PayrollRun, ApprovePayroll } from './PayrollRun';
+const EMP_FIELDS: Field[] = [
+  { key: 'full_name', label: 'Full name' }, { key: 'phone', label: 'Phone' }, { key: 'email', label: 'Email' },
+  { key: 'job_title', label: 'Job title', placeholder: 'Driver, Dispatcher…' },
+  { key: 'department', label: 'Department', type: 'select', options: [['drivers', 'Drivers'], ['warehouse', 'Warehouse'], ['dispatch', 'Dispatch'], ['office', 'Office'], ['finance', 'Finance']] },
+  { key: 'pay_model', label: 'Pay model', type: 'select', options: [['salary', 'Monthly salary'], ['salary_plus_stop', 'Salary + per stop'], ['per_stop', 'Per stop only'], ['hourly', 'Hourly']] },
+  { key: 'base_salary', label: 'Monthly salary €', type: 'number' }, { key: 'per_stop_rate', label: 'Per stop €', type: 'number' }, { key: 'hourly_rate', label: 'Per hour €', type: 'number' },
+  { key: 'start_date', label: 'Start date', type: 'date' }, { key: 'iban', label: 'IBAN', span: 2 }
+];
 export const metadata = { title: 'HR & Payroll' };
 const SH: Record<string, string> = { morning: '#EEF0FF', afternoon: '#E9F3FF', full: '#E8F8EF', off: '#F0F2F7', leave: '#FFF4E5', sick: '#FDECEC' };
 export default async function Page() {
@@ -16,16 +25,19 @@ export default async function Page() {
   ]);
   const payroll = ((emp ?? []) as any[]).reduce((s, e) => s + Number(e.base_salary || 0), 0);
   return (<>
-    <PageHeader title="HR & Payroll" subtitle={`${emp?.length ?? 0} staff · base payroll ${euro(payroll, 0)} / month`} />
+    <PageHeader title="People & payroll" subtitle={`${emp?.length ?? 0} staff · base payroll ${euro(payroll, 0)} / month`}>
+      <RecordForm table="employees" kind="primary" label="+ Add employee" extra={{ org_id: ws.org.id, hub_id: ws.hub?.id }} initial={{ pay_model: 'salary', department: 'drivers', status: 'active' }} fields={EMP_FIELDS} />
+    </PageHeader>
     {['owner', 'admin', 'finance', 'hr'].includes(ws.role) && <PayrollRun orgId={ws.org.id} />}
-    {((runs ?? []) as any[]).map((r) => (
-      <section key={r.id} className="card overflow-x-auto">
-        <div className="flex flex-wrap items-center gap-3 px-5 pt-4"><h2 className="flex-1 text-base font-semibold">Payroll {r.period_start} → {r.period_end} · {euro(r.total)}</h2><Pill bg={r.status === 'approved' ? '#E8F8EF' : '#FFF4E5'} ink={r.status === 'approved' ? '#067647' : '#B54708'}>{r.status}</Pill>{r.status === 'draft' && ['owner', 'admin', 'finance'].includes(ws.role) && <ApprovePayroll id={r.id} />}</div>
-        <table className="mt-2 w-full min-w-[760px] border-collapse text-[13px]"><thead className="bg-[#FAFBFD]"><tr><th className="th pl-5">Employee</th><th className="th text-right">Base</th><th className="th text-right">Stops</th><th className="th text-right">Bonus</th><th className="th text-right">Hours</th><th className="th text-right">Deductions</th><th className="th pr-5 text-right">Net</th></tr></thead>
+    {((runs ?? []) as any[]).map((r, idx) => (
+      <Accordion key={r.id} defaultOpen={idx === 0} icon="wallet" title={`Payroll ${r.period_start} → ${r.period_end}`} meta={`${euro(r.total)} · ${r.status}`}>
+      <section className="overflow-x-auto">
+        <div className="flex flex-wrap items-center gap-3 px-5 pt-4"><span className="flex-1" /><Pill bg={r.status === 'approved' ? '#E8F8EF' : '#FFF4E5'} ink={r.status === 'approved' ? '#067647' : '#B54708'}>{r.status}</Pill>{r.status === 'draft' && ['owner', 'admin', 'finance'].includes(ws.role) && <ApprovePayroll id={r.id} />}</div>
+        <table className="mt-2 w-full min-w-[760px] border-collapse text-[13px]"><thead className="bg-white/30"><tr><th className="th pl-5">Employee</th><th className="th text-right">Base</th><th className="th text-right">Stops</th><th className="th text-right">Bonus</th><th className="th text-right">Hours</th><th className="th text-right">Deductions</th><th className="th pr-5 text-right">Net</th></tr></thead>
         <tbody>{(r.slips ?? []).sort((a: any, b: any) => b.net - a.net).map((p: any) => <tr key={p.id} className="border-t border-line"><td className="td pl-5"><span className="font-medium">{p.employee?.full_name}</span> <span className="text-xs text-ink-3">{p.employee?.job_title}</span></td><td className="td text-right font-mono">{euro(p.base)}</td><td className="td text-right font-mono">{p.stop_count}</td><td className="td text-right font-mono">{euro(p.stop_bonus)}</td><td className="td text-right font-mono">{p.hours}</td><td className={`td text-right font-mono ${Number(p.deductions) > 0 ? 'text-danger-ink' : ''}`}>{Number(p.deductions) > 0 ? '−' + euro(p.deductions) : '—'}</td><td className="td pr-5 text-right font-mono font-semibold">{euro(p.net)}</td></tr>)}</tbody></table>
-      </section>))}
+      </section></Accordion>))}
     <section className="card overflow-x-auto"><table className="w-full min-w-[900px] border-collapse text-[13px]">
-      <thead className="bg-[#FAFBFD]"><tr><th className="th pl-5">Employee</th><th className="th">Role</th><th className="th">Pay</th>{days.map((d) => <th key={d} className="th text-center">{new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' })}</th>)}</tr></thead>
+      <thead className="bg-white/30"><tr><th className="th pl-5">Employee</th><th className="th">Role</th><th className="th">Pay</th>{days.map((d) => <th key={d} className="th text-center">{new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' })}</th>)}</tr></thead>
       <tbody>{((emp ?? []) as any[]).map((e) => (
         <tr key={e.id} className="border-t border-line"><td className="td pl-5"><span className="flex items-center gap-2.5"><Avatar name={e.full_name} size={28} /><span className="flex flex-col"><span className="font-medium">{e.full_name}</span><span className="text-xs text-ink-3">{phonePretty(e.phone)}</span></span></span></td>
           <td className="td text-ink-2">{e.job_title}</td>

@@ -41,9 +41,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
 
   return (
     <>
-      <PageHeader title="Orders" subtitle={`${count ?? 0} orders${q ? ` matching “${q}”` : ''} · every parcel from every merchant in one list.`}>
-        <Link href="/orders/new" className="btn-primary"><Icon name="plus" size={16} color="#fff" strokeWidth={2} />New order</Link>
-      </PageHeader>
+      <PageHeader title="Orders" subtitle={`${count ?? 0} orders${q ? ` matching “${q}”` : ''} · every parcel from every merchant in one list.`} />
 
       <div className="flex flex-wrap gap-1 border-b border-line">
         {ORDER_TABS.map((t, i) => (
@@ -64,13 +62,13 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
       <section className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[960px] border-collapse text-[13px]">
-            <thead className="bg-[#FAFBFD]"><tr>
+            <thead className="bg-white/30"><tr>
               <th className="th pl-5">Order</th><th className="th">Customer</th><th className="th">Address</th><th className="th">Merchant</th>
               <th className="th">Zone</th><th className="th">Date</th><th className="th text-right">COD</th><th className="th pr-5">Status</th>
             </tr></thead>
             <tbody>
               {(orders ?? []).map((o: any) => (
-                <tr key={o.id} className="border-t border-line hover:bg-[#FAFBFD]">
+                <tr key={o.id} className="border-t border-line hover:bg-white/30">
                   <td className="td pl-5"><Link href={`/orders/${o.id}`} className="font-mono font-medium text-brand-hover">{o.code}</Link></td>
                   <td className="td"><span className="flex flex-col"><span className="font-medium">{o.customer_name}</span><span className="text-xs text-ink-3">{phonePretty(o.customer_phone)}</span></span></td>
                   <td className="td max-w-[240px]"><span className="flex items-center gap-1.5">{o.needs_pin && <span title="Needs a map pin" className="h-1.5 w-1.5 flex-none rounded-full bg-danger" />}<span className="truncate text-ink-2">{o.address_line}{o.city ? `, ${o.city}` : ''}</span></span></td>
