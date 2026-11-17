@@ -6,6 +6,7 @@ import { Icon } from '@/components/Icon';
 import { StatusPill, Pill } from '@/components/ui';
 import { STOP_STATUS, euro, time, type OrderStatus, type StopStatus } from '@routa/shared';
 import { RouteSettings, StopControls } from '../DispatchActions';
+import { MapView, type MapMarker, type MapLine } from '@/components/MapView';
 
 export default async function RoutePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -13,11 +14,19 @@ export default async function RoutePage({ params }: { params: Promise<{ id: stri
   const sb = await createClient();
   const { data: r } = await sb.from('routes').select('*, driver:drivers(id, full_name), vehicle:vehicles(id, plate, model, capacity_kg, fuel_l_per_100km), stops:route_stops(id, sequence, status, eta, order:orders(id, code, status, customer_name, address_line, cod_amount, weight_kg, zone:zones(name)))').eq('id', id).maybeSingle();
   if (!r) notFound();
-  const [{ data: drivers }, { data: vehicles }, { data: dayRoutes }] = await Promise.all([
+  const [{ data: drivers }, { data: vehicles }, { data: dayRoutes }, { data: map }] = await Promise.all([
     sb.from('drivers').select('id, full_name').eq('org_id', ws.org.id).eq('status', 'active').order('full_name'),
     sb.from('vehicles').select('id, plate, model').eq('org_id', ws.org.id).eq('active', true).order('plate'),
-    sb.from('routes').select('id, code, driver:drivers(full_name)').eq('org_id', ws.org.id).eq('date', r.date).not('status', 'in', '(completed,cancelled)').order('code')
+    sb.from('routes').select('id, code, driver:drivers(full_name)').eq('org_id', ws.org.id).eq('date', r.date).not('status', 'in', '(completed,cancelled)').order('code'),
+    sb.rpc('day_map', { p_org: ws.org.id, p_date: r.date, p_route: r.id })
   ]);
+  const markers: MapMarker[] = [];
+  const lines: MapLine[] = [];
+  if (map?.hub?.lat) markers.push({ lat: map.hub.lat, lng: map.hub.lng, kind: 'hub', title: map.hub.name ?? 'Hub' });
+  for (const x of (map?.routes ?? []) as any[]) {
+    if (x.line?.coordinates?.length) lines.push({ color: x.color ?? '#5B5CF6', coords: x.line.coordinates.map((c: number[]) => [c[1], c[0]]) });
+    for (const st of x.stops ?? []) markers.push({ lat: st.lat, lng: st.lng, label: String(st.seq), color: x.color, title: `Stop ${st.seq} · ${st.code}`, sub: `${st.name} · ${st.address ?? ''}`, href: `/orders/${st.order_id}` });
+  }
   const stops = [...(r.stops ?? [])].sort((a: any, b: any) => a.sequence - b.sequence) as any[];
   const ids = stops.map((s) => s.id);
   const routeOpts = ((dayRoutes ?? []) as any[]).map((x) => ({ id: x.id, label: `${x.code} · ${x.driver?.full_name ?? 'no driver'}` }));
@@ -40,6 +49,7 @@ export default async function RoutePage({ params }: { params: Promise<{ id: stri
           <div key={k} className={`card p-4 ${k === 'Load' && cap && kg > cap ? 'border-danger' : ''}`}><span className="text-xs text-ink-3">{k}</span><p className="font-mono text-lg font-semibold">{v}</p></div>
         ))}
       </section>
+      {markers.length > 1 && <MapView height={380} markers={markers} lines={lines} />}
       {canEdit && <section className="card p-5"><RouteSettings routeId={r.id} driverId={r.driver_id} vehicleId={r.vehicle_id} isDraft={r.status === 'draft'} drivers={(drivers ?? []).map((d) => ({ id: d.id, label: d.full_name }))} vehicles={(vehicles ?? []).map((v) => ({ id: v.id, label: `${v.plate} · ${v.model}` }))} /></section>}
       <section className="card overflow-x-auto">
         <table className="w-full min-w-[900px] border-collapse text-[13px]">

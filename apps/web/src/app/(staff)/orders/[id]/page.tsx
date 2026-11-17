@@ -6,6 +6,8 @@ import { StatusPill, Avatar } from '@/components/ui';
 import { Icon } from '@/components/Icon';
 import { ORDER_STATUS, euro, phonePretty, time, type OrderStatus } from '@routa/shared';
 import { OrderActions } from './OrderActions';
+import { PinPicker } from '@/components/PinPicker';
+import { MapView } from '@/components/MapView';
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -17,6 +19,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     .eq('id', id)
     .maybeSingle();
   if (!o) notFound();
+  const { data: point } = await supabase.rpc('order_point', { p_order: o.id });
+  const here = point?.lat != null ? { lat: point.lat as number, lng: point.lng as number } : null;
+  const canPin = ['owner', 'admin', 'dispatcher', 'front_desk', 'helpdesk', 'warehouse'].includes(ws.role) && !['delivered', 'cancelled', 'returned_to_merchant'].includes(o.status);
 
   const events = [...(o.events ?? [])].sort((a: any, b: any) => a.created_at.localeCompare(b.created_at));
   const stop = (o.stop ?? [])[0] as any;
@@ -61,6 +66,17 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               <span className="text-[13px] text-ink-2">{o.weight_kg ?? '—'} kg · {o.parcels ?? 1} parcel(s) · attempt {o.attempts}</span>
             </div>
             {o.notes_driver && <div className="rounded-[10px] bg-warning-tint px-3 py-2 text-[13px] text-warning-ink sm:col-span-2">Note for driver: {o.notes_driver}</div>}
+          </section>
+
+          <section className="card flex flex-col gap-3 p-5">
+            <div className="flex items-center gap-2">
+              <h2 className="flex-1 text-base font-semibold">Location</h2>
+              {here && <span className="text-xs text-ink-3">{Number(point?.confidence ?? 1) >= 0.9 ? 'Exact pin' : 'Approximate (neighbourhood / street)'}</span>}
+            </div>
+            {canPin
+              ? <PinPicker orgId={ws.org.id} orderId={o.id} value={here} hub={point?.hub ?? null} height={280}
+                  address={{ address_line: o.address_line ?? '', city: o.city ?? '', landmark: o.landmark ?? '', phone: o.customer_phone ?? '' }} />
+              : here ? <MapView height={240} markers={[{ ...here, label: '•', title: o.customer_name, sub: o.address_line }]} /> : <p className="text-[13px] text-ink-3">No map point yet.</p>}
           </section>
 
           <section className="card flex flex-col gap-4 p-5">

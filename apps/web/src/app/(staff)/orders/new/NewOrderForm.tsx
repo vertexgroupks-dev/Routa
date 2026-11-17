@@ -3,15 +3,18 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { euro } from '@routa/shared';
+import { PinPicker } from '@/components/PinPicker';
+import type { Pt } from '@/components/MapView';
 
-type Props = { orgId: string; merchants: { id: string; name: string; code: string }[]; zones: { name: string; base_fee: number; sla: string | null; color: string | null }[] };
+type Props = { orgId: string; merchants: { id: string; name: string; code: string }[]; zones: { name: string; base_fee: number; sla: string | null; color: string | null }[]; hub: Pt | null };
 
-export function NewOrderForm({ orgId, merchants, zones }: Props) {
+export function NewOrderForm({ orgId, merchants, zones, hub }: Props) {
   const router = useRouter();
   const [f, setF] = useState({
     merchant_id: merchants[0]?.id ?? '', customer_name: '', customer_phone: '+383 ', address_line: '', city: 'Prishtinë', landmark: '',
-    floor: '', apartment: '', lat: '', lng: '', weight_kg: '1', parcels: '1', cod_amount: '0', notes_driver: '', fee_payer: 'merchant'
+    floor: '', apartment: '', weight_kg: '1', parcels: '1', cod_amount: '0', notes_driver: '', fee_payer: 'merchant'
   });
+  const [pin, setPin] = useState<{ p: Pt | null; c: number }>({ p: null, c: 1 });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setF({ ...f, [k]: e.target.value });
@@ -19,7 +22,7 @@ export function NewOrderForm({ orgId, merchants, zones }: Props) {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true); setError(null);
-    const hasPin = f.lat.trim() !== '' && f.lng.trim() !== '';
+    const hasPin = !!pin.p;
     const { data, error } = await createClient().from('orders').insert({
       org_id: orgId,
       merchant_id: f.merchant_id || null,
@@ -31,16 +34,19 @@ export function NewOrderForm({ orgId, merchants, zones }: Props) {
       city: f.city,
       landmark: f.landmark || null,
       address_details: { floor: f.floor || null, apartment: f.apartment || null },
-      location: hasPin ? `SRID=4326;POINT(${Number(f.lng)} ${Number(f.lat)})` : null,
-      geocode_confidence: hasPin ? 1 : null,
+      location: hasPin ? `SRID=4326;POINT(${pin.p!.lng} ${pin.p!.lat})` : null,
+      geocode_confidence: hasPin ? pin.c : null,
       weight_kg: Number(f.weight_kg) || null,
       parcels: Number(f.parcels) || 1,
       cod_amount: Number(f.cod_amount) || 0,
       fee_payer: f.fee_payer,
       notes_driver: f.notes_driver || null
     }).select('id').single();
+    if (error) { setBusy(false); return setError(error.message); }
+    // No pin yet: look the address up now so the order is ready for route planning.
+    if (!hasPin) await createClient().functions.invoke('geocode', { body: { org_id: orgId, order_id: data.id } }).catch(() => null);
+    else await createClient().rpc('set_order_pin', { p_order: data.id, p_lat: pin.p!.lat, p_lng: pin.p!.lng, p_confidence: pin.c, p_remember: true });
     setBusy(false);
-    if (error) return setError(error.message);
     router.push(`/orders/${data.id}`);
     router.refresh();
   }
@@ -66,9 +72,11 @@ export function NewOrderForm({ orgId, merchants, zones }: Props) {
           <label className="label sm:col-span-2">Landmark (optional)<input className="input" value={f.landmark} onChange={set('landmark')} placeholder="afër shkollës Faik Konica" /></label>
           <label className="label">Floor<input className="input" value={f.floor} onChange={set('floor')} /></label>
           <label className="label">Apartment<input className="input" value={f.apartment} onChange={set('apartment')} /></label>
-          <label className="label sm:col-span-2">Latitude<input className="input font-mono" value={f.lat} onChange={set('lat')} placeholder="42.6629" /></label>
-          <label className="label sm:col-span-2">Longitude<input className="input font-mono" value={f.lng} onChange={set('lng')} placeholder="21.1655" /></label>
-          <p className="text-xs text-ink-3 sm:col-span-4">No pin? Leave the coordinates empty — the order is flagged “Needs map pin” and Helpdesk fixes it before dispatch. Automatic address lookup arrives in Stage 3.</p>
+          <div className="sm:col-span-4">
+            <PinPicker orgId={orgId} hub={hub} value={pin.p} onChange={(p, c) => setPin({ p, c })}
+              address={{ address_line: f.address_line, city: f.city, landmark: f.landmark, phone: f.customer_phone.replace(/\s/g, '') }} />
+            <p className="mt-1 text-xs text-ink-3">Skip the map if you're busy — the address is looked up automatically when you save.</p>
+          </div>
         </section>
       </div>
       <aside className="flex min-w-0 flex-[1_1_320px] flex-col gap-4">

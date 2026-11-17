@@ -4,7 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Avatar, Empty, Pill } from '@/components/ui';
 import { todayKs, time } from '@routa/shared';
 import { PublishButton } from './PublishButton';
-import { NewRoute, AddToRoute } from './DispatchActions';
+import { NewRoute, AddToRoute, AutoPlan } from './DispatchActions';
+import { MapView, type MapMarker, type MapLine } from '@/components/MapView';
 
 export const metadata = { title: 'Dispatch & Routes' };
 const RS: Record<string, [string, string, string]> = {
@@ -17,13 +18,25 @@ export default async function DispatchPage({ searchParams }: { searchParams: Pro
   const ws = await requireStaff('/dispatch');
   const supabase = await createClient();
   const date = sp.date ?? todayKs();
-  const [{ data: routes }, { count: unplanned }, { count: noPin }, { data: unassigned }, { data: drivers }] = await Promise.all([
+  const [{ data: routes }, { count: unplanned }, { count: noPin }, { data: unassigned }, { data: drivers }, { data: map }, { data: nextDay }] = await Promise.all([
     supabase.from('routes').select('id, code, status, color, planned_km, planned_minutes, load_kg, dock, driver:drivers(full_name, phone), vehicle:vehicles(plate, model, capacity_kg), stops:route_stops(status, eta)').eq('org_id', ws.org.id).eq('date', date).order('code'),
     supabase.from('orders').select('id', { count: 'exact', head: true }).eq('org_id', ws.org.id).eq('delivery_date', date).in('status', ['confirmed', 'received', 'packed']),
     supabase.from('orders').select('id', { count: 'exact', head: true }).eq('org_id', ws.org.id).eq('delivery_date', date).eq('needs_pin', true),
     supabase.from('orders').select('id, code, status, customer_name, address_line, needs_pin, weight_kg, zone:zones(name), stops:route_stops(id)').eq('org_id', ws.org.id).eq('delivery_date', date).in('status', ['confirmed', 'received', 'packed', 'rescheduled']).order('code').limit(200),
-    supabase.from('drivers').select('id, full_name').eq('org_id', ws.org.id).eq('status', 'active').order('full_name')
+    supabase.from('drivers').select('id, full_name').eq('org_id', ws.org.id).eq('status', 'active').order('full_name'),
+    supabase.rpc('day_map', { p_org: ws.org.id, p_date: date }),
+    supabase.from('orders').select('delivery_date').eq('org_id', ws.org.id).gt('delivery_date', date).in('status', ['confirmed', 'received', 'packed', 'rescheduled']).order('delivery_date').limit(1).maybeSingle()
   ]);
+  const markers: MapMarker[] = [];
+  const lines: MapLine[] = [];
+  if (map?.hub?.lat) markers.push({ lat: map.hub.lat, lng: map.hub.lng, kind: 'hub', title: map.hub.name ?? 'Hub' });
+  for (const r of (map?.routes ?? []) as any[]) {
+    if (r.line?.coordinates?.length) lines.push({ color: r.color ?? '#5B5CF6', coords: r.line.coordinates.map((c: number[]) => [c[1], c[0]]), dashed: r.status === 'draft' });
+    for (const st of r.stops ?? []) markers.push({ lat: st.lat, lng: st.lng, label: String(st.seq), color: r.color, title: `${r.code} · stop ${st.seq} · ${st.code}`, sub: `${st.name} · ${st.address ?? ''}`, href: `/orders/${st.order_id}` });
+  }
+  for (const o of (map?.open ?? []) as any[]) markers.push({ lat: o.lat, lng: o.lng, kind: 'open', title: `${o.code} · not on a route`, sub: `${o.name} · ${o.address ?? ''}`, href: `/orders/${o.order_id}` });
+  const live = (routes ?? []).filter((r) => !['draft', 'cancelled'].includes(r.status)).length;
+  const canPlan = ['owner', 'admin', 'dispatcher'].includes(ws.role);
   const routeOpts = ((routes ?? []) as any[]).filter((r) => !['completed', 'cancelled'].includes(r.status)).map((r) => ({ id: r.id, label: `${r.code} · ${r.driver?.full_name ?? 'no driver'}` }));
   const open = ((unassigned ?? []) as any[]).filter((o) => !(o.stops ?? []).length);
   const drafts = (routes ?? []).filter((r) => r.status === 'draft').length;
@@ -34,6 +47,15 @@ export default async function DispatchPage({ searchParams }: { searchParams: Pro
         <form action="/dispatch" className="flex gap-2"><input type="date" name="date" defaultValue={date} className="input h-9 w-auto py-0" /><button className="btn-ghost">Show</button></form>
         <PublishButton orgId={ws.org.id} date={date} drafts={drafts} />
       </PageHeader>
+
+      {nextDay?.delivery_date && (unplanned ?? 0) === 0 && (
+        <Link href={`/dispatch?date=${nextDay.delivery_date}`} className="card flex items-center gap-3 px-5 py-3 text-[13px] hover:border-brand">
+          <span className="flex-1">No orders waiting for {date}. Next orders are for <b>{nextDay.delivery_date}</b> (orders made after the daily cut-off go to the next day).</span>
+          <span className="link">Open that day →</span>
+        </Link>
+      )}
+      {canPlan && <AutoPlan orgId={ws.org.id} date={date} drafts={drafts} live={live} />}
+      {markers.length > 1 && <MapView height={420} markers={markers} lines={lines} />}
 
       <div className="flex flex-wrap items-center gap-3">
         <h2 className="flex-1 text-[15px] font-semibold">Routes</h2>
@@ -68,7 +90,7 @@ export default async function DispatchPage({ searchParams }: { searchParams: Pro
           );
         })}
       </section>
-      {(routes ?? []).length === 0 && <div className="card"><Empty title="No routes for this day" body="Once optimisation is connected (Stage 4) you’ll build routes here in one click." /></div>}
+      {(routes ?? []).length === 0 && <div className="card"><Empty title="No routes for this day" body="Press “Plan routes automatically” above, or build one by hand with “+ New route”." /></div>}
       <section className="card overflow-x-auto">
         <h2 className="px-5 pt-5 text-base font-semibold">Not on a route yet ({open.length})</h2>
         <table className="mt-2 w-full min-w-[720px] border-collapse text-[13px]"><tbody>{open.map((o) => (
