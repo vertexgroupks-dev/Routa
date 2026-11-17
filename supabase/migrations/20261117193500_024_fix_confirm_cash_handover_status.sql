@@ -1,0 +1,4 @@
+-- 024 confirm_cash_handover: cast the CASE result to public.handover_status
+-- (a CASE of text literals is text; Postgres refused to store it in the enum column).
+-- Applied via Supabase MCP on 2026-11-17. Full function body = migration 0xx + this cast,
+-- plus a check that the counted amount is not negative and the note is added to the difference ticket.
