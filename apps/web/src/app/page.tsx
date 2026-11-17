@@ -123,11 +123,11 @@ function CashView() {
       <div className="mt-3 divide-y divide-[#EDF0F5] text-[14px]">
         {rows.map(([c, n, a]) => <div key={c} className="flex gap-3 py-2"><span className="w-20 tabular-nums text-[#6B7489]">{c}</span><span className="flex-1">{n}</span><span className="tabular-nums">€{a}</span></div>)}
       </div>
-      <div className="mt-4 flex items-end gap-4">
+      <div className="mt-4 flex flex-wrap items-end gap-x-4 gap-y-3">
         <div className="flex flex-col"><span className="text-[12.5px] text-[#6B7489]">Should hand in</span><span className="text-[22px] font-bold tabular-nums">€99.90</span></div>
         <div className="flex flex-col"><span className="text-[12.5px] text-[#6B7489]">Counted</span><span className="text-[22px] font-bold tabular-nums">€99.90</span></div>
         <span className="mb-1 text-[13.5px] font-semibold text-[#0B6B42]">Matches</span>
-        <span className="ml-auto rounded-xl bg-[#4A49E3] px-4 py-2 text-[14px] font-semibold text-white">Cash received</span>
+        <span className="rounded-xl bg-[#4A49E3] px-4 py-2 text-[14px] font-semibold text-white sm:ml-auto">Cash received</span>
       </div>
     </div>
   );
@@ -142,7 +142,7 @@ const BEFORE_AFTER: [string, string][] = [
   ['Nobody can prove a parcel was delivered.', 'Each delivery saves a photo, the customer’s signature, the time and the GPS point. Anything unusual is flagged for review.']
 ];
 const DAY: [string, string, string][] = [
-  ['12:00', 'Orders are in', 'Shops send orders from their portal, a CSV file or the API; the front desk adds walk-ins. Zone, price and delivery day are set automatically.'],
+  ['Day before', 'Orders are in', 'Until the 12:00 cut-off, shops send orders from their portal, a CSV file or the API, and the front desk adds walk-ins. Zone, price and delivery day are set automatically.'],
   ['07:30', 'Routes are planned', 'The dispatcher presses Plan routes, checks the map and publishes. Each driver gets their route on the phone.'],
   ['08:00', 'Vans are loaded', 'The warehouse picks by route. Drivers scan every parcel label into the van, so nothing is left on the shelf.'],
   ['08:30', 'Parcels go out', 'Drivers navigate stop by stop, call customers from the app, and finish each delivery with a photo, a signature and the cash. The office follows on the live map.'],
@@ -172,7 +172,7 @@ const FAQ: [string, string][] = [
 
 export default function Landing() {
   return (
-    <div className={`${grotesk.variable} landing min-h-screen bg-[#F4F6FA] text-[#0E1325]`} style={{ fontFamily: 'var(--font-landing), system-ui, sans-serif' }}>
+    <div className={`${grotesk.variable} landing min-h-screen overflow-x-clip bg-[#F4F6FA] text-[#0E1325]`} style={{ fontFamily: 'var(--font-landing), system-ui, sans-serif' }}>
       <style>{`
         .landing ::selection { background: #C8F25C; }
         .landing a:focus-visible, .landing button:focus-visible, .landing input:focus-visible, .landing summary:focus-visible { outline: 2px solid #4A49E3; outline-offset: 3px; border-radius: 8px; }
@@ -253,21 +253,21 @@ export default function Landing() {
       {/* Product */}
       <section id="product" className="bg-white">
         <div className="mx-auto grid max-w-[1180px] gap-20 px-5 py-24 sm:px-8">
-          <div className="grid items-center gap-10 lg:grid-cols-2">
+          <div className="grid items-center gap-10 lg:grid-cols-2 [&>*]:min-w-0">
             <div>
               <h2 className="text-[30px] font-bold leading-[1.15] tracking-[-0.02em] sm:text-[36px]">The dispatcher checks the plan instead of making it.</h2>
               <p className="mt-4 text-[17px] leading-[1.6] text-[#3E4659]">Routa looks at every order for the day, every free driver and the size of every van. Choose <b>Use all drivers</b> to finish sooner, or <b>Fewest drivers</b> to spend less on fuel. Orders it can’t plan are listed with the reason, so you fix them before the vans leave.</p>
             </div>
             <PlanView />
           </div>
-          <div className="grid items-center gap-10 lg:grid-cols-2">
+          <div className="grid items-center gap-10 lg:grid-cols-2 [&>*]:min-w-0">
             <div className="lg:order-2">
               <h2 className="text-[30px] font-bold leading-[1.15] tracking-[-0.02em] sm:text-[36px]">Drivers see one stop at a time.</h2>
               <p className="mt-4 text-[17px] leading-[1.6] text-[#3E4659]">The app shows the next customer, the address notes and the cash to collect. One tap opens navigation or calls the customer. A delivery is finished with a photo and a signature; a failed one with the reason, so the helpdesk can call the customer back the same day.</p>
             </div>
             <div className="lg:order-1"><PhoneView /></div>
           </div>
-          <div className="grid items-center gap-10 lg:grid-cols-2">
+          <div className="grid items-center gap-10 lg:grid-cols-2 [&>*]:min-w-0">
             <div>
               <h2 className="text-[30px] font-bold leading-[1.15] tracking-[-0.02em] sm:text-[36px]">Every euro is counted against an order.</h2>
               <p className="mt-4 text-[17px] leading-[1.6] text-[#3E4659]">At the end of the shift the driver shows a code. The cash desk sees exactly which orders the money belongs to, counts it and confirms. Shops’ balances update straight away, and a missing amount becomes a ticket instead of an argument.</p>
