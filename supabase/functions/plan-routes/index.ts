@@ -95,15 +95,23 @@ Deno.serve(async (req) => {
   const plan = solve(jobs, units, m.dist, m.dur, { serviceS, maxRouteS, maxStops });
   for (const u of plan.unassigned) { const o = plannable[u.node - 1]; unassigned.push({ order_id: o.id, code: o.code, reason: u.reason }); }
 
-  // Same drivers, stops in the order they came in: what it would cost without optimising.
-  let naiveM = 0;
-  for (const r of plan.routes) {
-    const ns = [...r.nodes].sort((a, b) => a - b);
-    let prev = 0; for (const x of ns) { naiveM += m.dist[prev]![x]!; prev = x; } naiveM += m.dist[prev]![0]!;
+  // Baseline "no planning": the same number of drivers each get the next orders from the list,
+  // in the order they came in (how a dispatcher hands out work by hand).
+  const k = Math.max(1, plan.routes.length);
+  const order = plannable.map((_, i) => i + 1).filter((x) => !plan.unassigned.some((u) => u.node === x));
+  const chunk = Math.ceil(order.length / k);
+  let naiveM = 0, naiveLongestS = 0;
+  for (let c = 0; c < k; c++) {
+    const ns = order.slice(c * chunk, (c + 1) * chunk);
+    if (!ns.length) continue;
+    let dm = 0, ds = 0, prev = 0;
+    for (const x of ns) { dm += m.dist[prev]![x]!; ds += m.dur[prev]![x]! + serviceS; prev = x; }
+    dm += m.dist[prev]![0]!; ds += m.dur[prev]![0]!;
+    naiveM += dm; naiveLongestS = Math.max(naiveLongestS, ds);
   }
 
   // 5. Build the routes (times, distances, map shape)
-  let totalM = 0, totalS = 0, fuelL = 0, naiveFuelL = 0;
+  let totalM = 0, totalS = 0, fuelL = 0, longestS = 0;
   const routes = [];
   for (const r of plan.routes) {
     let t = start.getTime(), prev = 0;
@@ -118,15 +126,16 @@ Deno.serve(async (req) => {
     const shape = await routeShape([hub, ...r.nodes.map((x) => points[x]!), hub]);
     const per100 = r.unit.vehicleId ? fuelOf.get(r.unit.vehicleId) ?? 8 : 8;
     totalM += r.distM; totalS += r.durS; fuelL += (r.distM / 100000) * per100;
-    const ns = [...r.nodes].sort((a, b) => a - b); let nm = 0, p2 = 0; for (const x of ns) { nm += m.dist[p2]![x]!; p2 = x; } nm += m.dist[p2]![0]!;
-    naiveFuelL += (nm / 100000) * per100;
+    longestS = Math.max(longestS, r.durS);
     routes.push({ driver_id: r.unit.driverId, vehicle_id: r.unit.vehicleId, km: r.distM / 1000, minutes: Math.round(r.durS / 60), start: start.toISOString(), end: new Date(t).toISOString(), geometry: shape, stops });
   }
 
   const summary = {
     orders: orders.length, planned: plannable.length - plan.unassigned.length, routes: routes.length, geocoded: found,
     km: Math.round(totalM / 100) / 10, minutes: Math.round(totalS / 60), fuel_l: Math.round(fuelL * 10) / 10,
-    km_saved: Math.max(0, Math.round((naiveM - totalM) / 100) / 10), fuel_saved_l: Math.max(0, Math.round((naiveFuelL - fuelL) * 10) / 10),
+    longest_minutes: Math.round(longestS / 60), naive_km: Math.round(naiveM / 100) / 10, naive_longest_minutes: Math.round(naiveLongestS / 60),
+    km_saved: Math.max(0, Math.round((naiveM - totalM) / 100) / 10),
+    fuel_saved_l: Math.max(0, Math.round(((naiveM - totalM) / 100000) * (totalM ? (fuelL * 100000) / totalM : 8) * 10) / 10),
     distances: m.source, drivers_free: units.length, mode: spread ? 'spread' : 'fuel'
   };
   const { data: saved, error: e } = await sb.rpc('apply_route_plan', { p_org: org_id, p_date: date, p_plan: { routes, unassigned, summary, settings: { mode: spread ? 'spread' : 'fuel', serviceS, start: start.toISOString(), end: dayEnd.toISOString() } } });

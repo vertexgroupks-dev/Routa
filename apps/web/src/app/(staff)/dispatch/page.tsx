@@ -44,7 +44,7 @@ export default async function DispatchPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <PageHeader title="Dispatch & Routes" subtitle={`${date} · ${routes?.length ?? 0} routes · ${unplanned ?? 0} orders not on a route · ${noPin ?? 0} need a map pin`}>
-        <form action="/dispatch" className="flex gap-2"><input type="date" name="date" defaultValue={date} className="input h-9 w-auto py-0" /><button className="btn-ghost">Show</button></form>
+        <form action="/dispatch" className="flex gap-2"><input key={date} type="date" name="date" defaultValue={date} className="input h-9 w-auto py-0" /><button className="btn-ghost">Show</button></form>
         <PublishButton orgId={ws.org.id} date={date} drafts={drafts} />
       </PageHeader>
 

@@ -67,7 +67,7 @@ export function RouteSettings({ routeId, driverId, vehicleId, drivers, vehicles,
 }
 
 type PlanResult = {
-  summary?: { orders: number; planned: number; routes: number; km?: number; minutes?: number; fuel_l?: number; km_saved?: number; fuel_saved_l?: number; geocoded?: number; distances?: string };
+  summary?: { orders: number; planned: number; routes: number; km?: number; minutes?: number; fuel_l?: number; km_saved?: number; fuel_saved_l?: number; geocoded?: number; distances?: string; longest_minutes?: number; naive_km?: number; naive_longest_minutes?: number; mode?: string };
   unassigned?: { order_id: string; code: string; reason: string }[];
   message?: string;
 };
@@ -117,11 +117,20 @@ export function AutoPlan({ orgId, date, drafts, live }: { orgId: string; date: s
       {res && (
         <div className="flex flex-col gap-3">
           {s && s.routes > 0 ? (
+            <>
             <div className="grid grid-cols-[repeat(auto-fit,minmax(130px,1fr))] gap-2">
-              {[['Routes', String(s.routes)], ['Orders planned', `${s.planned} / ${s.orders}`], ['Total drive', `${s.km} km`], ['Driving + stops', h(s.minutes)], ['Fuel (est.)', `${s.fuel_l} L`], ['Saved vs. as entered', `${s.km_saved} km · ${s.fuel_saved_l} L`]].map(([k, v]) => (
+              {[['Routes', String(s.routes)], ['Orders planned', `${s.planned} / ${s.orders}`], ['Total drive', `${s.km} km`], ['Fuel (est.)', `${s.fuel_l} L`], ['Last driver back after', h(s.longest_minutes)]].map(([k, v]) => (
                 <span key={k} className="flex flex-col rounded-xl bg-white/60 px-3 py-2"><span className="text-[11px] text-ink-3">{k}</span><span className="font-mono text-sm font-semibold">{v}</span></span>
               ))}
             </div>
+            {s.naive_km != null && (
+              <div className="rounded-xl bg-success-tint px-3 py-2.5 text-[13px] text-success-ink">
+                <b>Compared with no planning</b> (the same {s.routes} driver{s.routes > 1 ? 's' : ''} taking orders in the order they came in: {s.naive_km} km, last back after {h(s.naive_longest_minutes)}):
+                {' '}<b>{s.km_saved} km and {s.fuel_saved_l} L less</b>{(s.naive_longest_minutes ?? 0) > (s.longest_minutes ?? 0) ? <>, finished <b>{h((s.naive_longest_minutes ?? 0) - (s.longest_minutes ?? 0))} sooner</b></> : null}.
+              </div>
+            )}
+            <p className="text-xs text-ink-3">{s.mode === 'fuel' ? 'Fewest drivers: least fuel in total, but the work sits on fewer people, so the day lasts longer.' : 'Use all drivers: the work is shared, so customers get parcels sooner. Total km is a little higher because every driver goes out and comes back.'}</p>
+            </>
           ) : <p className="text-[13px] text-ink-2">{res.message ?? 'Nothing to plan.'}</p>}
           {s?.distances === 'estimate' && <p className="text-xs text-warning-ink">Road distances were unavailable, so straight-line estimates were used. Plan again later for exact road times.</p>}
           {(res.unassigned ?? []).length > 0 && (
