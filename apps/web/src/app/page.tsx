@@ -62,6 +62,9 @@ export default function Landing() {
   return (
     <div className={`${grotesk.variable} landing min-h-screen overflow-x-clip bg-[#F4F6FF] text-[#0B1030]`} style={{ fontFamily: 'var(--font-landing), system-ui, sans-serif' }}>
       <style>{`
+        .night-tiles { filter: invert(1) hue-rotate(205deg) brightness(.78) contrast(1.15) saturate(.55); }
+        .landing .leaflet-control-attribution { background: rgba(7,11,36,.7); color: rgba(255,255,255,.55); }
+        .landing .leaflet-control-attribution a { color: rgba(255,255,255,.75); }
         .landing ::selection { background: #C8F25C; color: #0B1030; }
         .landing a:focus-visible, .landing button:focus-visible, .landing input:focus-visible, .landing summary:focus-visible { outline: 2px solid #8B8AFF; outline-offset: 3px; border-radius: 10px; }
         @keyframes toastIn { from { opacity: 0; transform: translateY(-8px) scale(.97); } to { opacity: 1; transform: none; } }

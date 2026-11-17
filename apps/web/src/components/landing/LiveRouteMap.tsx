@@ -37,7 +37,7 @@ export function LiveRouteMap() {
       const L = (await import('leaflet')).default ?? (await import('leaflet'));
       if (dead || !box.current) return;
       map = L.map(box.current, { zoomControl: false, attributionControl: true, dragging: false, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false, touchZoom: false });
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(map);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap', className: 'night-tiles' }).addTo(map);
       const all = DEMO_ROUTES.flatMap((r) => r.line);
       map.fitBounds(all, { padding: [30, 30] });
 
