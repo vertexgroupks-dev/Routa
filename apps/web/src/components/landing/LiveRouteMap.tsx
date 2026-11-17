@@ -31,7 +31,7 @@ export function LiveRouteMap() {
   const [done, setDone] = useState(0);
 
   useEffect(() => {
-    let map: any, raf = 0, dead = false, n = 0;
+    let map: any, raf = 0, dead = false, n = 0, ro: ResizeObserver | null = null;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     (async () => {
       const L = (await import('leaflet')).default ?? (await import('leaflet'));
@@ -39,7 +39,10 @@ export function LiveRouteMap() {
       map = L.map(box.current, { zoomControl: false, attributionControl: true, dragging: false, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false, touchZoom: false });
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap', className: 'night-tiles' }).addTo(map);
       const all = DEMO_ROUTES.flatMap((r) => r.line);
-      map.fitBounds(all, { padding: [30, 30] });
+      const fit = () => { map.invalidateSize(); map.fitBounds(all, { padding: [40, 40] }); };
+      fit();
+      ro = new ResizeObserver(() => fit());
+      ro.observe(box.current);
 
       const vans = DEMO_ROUTES.map((r, ri) => {
         L.polyline(r.line, { color: r.color, weight: 14, opacity: 0.16, lineCap: 'round', lineJoin: 'round' }).addTo(map);
@@ -79,7 +82,7 @@ export function LiveRouteMap() {
       };
       raf = requestAnimationFrame(tick);
     })();
-    return () => { dead = true; cancelAnimationFrame(raf); map?.remove(); };
+    return () => { dead = true; cancelAnimationFrame(raf); ro?.disconnect(); map?.remove(); };
   }, []);
 
   return (
