@@ -1,12 +1,15 @@
 import * as Location from 'expo-location';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FAILURE_REASONS, STOP_STATUS, euro, phonePretty, time, type FailureReason } from '@routa/shared';
 import { supabase } from '../../src/supabase';
 import { useTodayRoute } from '../../src/useRoute';
 import { colors, ui } from '../../src/theme';
+import { CameraSheet } from '../../src/CameraSheet';
+import { SignaturePad } from '../../src/SignaturePad';
+import { uploadPhoto, uploadSignature } from '../../src/upload';
 
 const uuid = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => { const r = (Math.random() * 16) | 0; return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16); });
 
@@ -29,6 +32,10 @@ export default function StopScreen() {
   const [reason, setReason] = useState<FailureReason>('no_answer');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
+  const [step, setStep] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [signature, setSignature] = useState<string | null>(null);
+  const [camera, setCamera] = useState(false);
   // One client id per attempt so a retry after bad signal never creates a duplicate.
   const [clientId] = useState(uuid);
 
@@ -58,26 +65,50 @@ export default function StopScreen() {
     if (cod > 0 && Math.abs(Number(cash.replace(',', '.')) - cod) > 0.009) {
       return Alert.alert('Check the cash', `This parcel is ${euro(cod)} cash on delivery. Enter the exact amount you collected.`);
     }
+    if (!photos.length) {
+      return Alert.alert('Photo missing', 'Take a photo of the parcel at the door (or in the customer’s hands). Save without a photo?', [
+        { text: 'Take photo', onPress: () => setCamera(true) },
+        { text: 'Save anyway', style: 'destructive', onPress: () => save() }
+      ]);
+    }
+    save();
+  }
+
+  async function save() {
     setBusy(true);
-    const p = await here();
-    const { data, error } = await supabase.rpc('complete_delivery', {
-      p_stop_id: stop!.id, p_client_id: clientId, p_recipient_type: recipient, p_recipient_name: recipientName || o.customer_name.split(' ')[0],
-      p_signature_path: null, p_photo_paths: [], p_lat: p.lat, p_lng: p.lng, p_cod_amount: cod > 0 ? Number(cash.replace(',', '.')) : 0,
-      p_cod_method: 'cash', p_delivered_at: new Date().toISOString()
-    });
-    setBusy(false);
-    if (error) return Alert.alert('Not saved', error.message);
-    const r = data as { flagged?: boolean };
-    if (r?.flagged) Alert.alert('Saved for review', 'Delivery saved. The office will review it (no photo yet, or far from the address).');
-    await reload();
-    router.back();
+    try {
+      setStep('Uploading photo…');
+      const photoPaths: string[] = [];
+      for (let i = 0; i < photos.length; i++) photoPaths.push(await uploadPhoto(route!.org_id, o.id, `${clientId}-${i + 1}`, photos[i]!));
+      let signaturePath: string | null = null;
+      if (signature) { setStep('Uploading signature…'); signaturePath = await uploadSignature(route!.org_id, o.id, clientId, signature); }
+      setStep('Saving delivery…');
+      const p = await here();
+      const { data, error } = await supabase.rpc('complete_delivery', {
+        p_stop_id: stop!.id, p_client_id: clientId, p_recipient_type: recipient, p_recipient_name: recipientName || o.customer_name.split(' ')[0],
+        p_signature_path: signaturePath, p_photo_paths: photoPaths, p_lat: p.lat, p_lng: p.lng, p_cod_amount: cod > 0 ? Number(cash.replace(',', '.')) : 0,
+        p_cod_method: 'cash', p_delivered_at: new Date().toISOString()
+      });
+      if (error) throw new Error(error.message);
+      const r = data as { flagged?: boolean };
+      if (r?.flagged) Alert.alert('Saved for review', 'Delivery saved. The office will double-check it (no photo, someone else received it, or far from the address).');
+      await reload();
+      router.back();
+    } catch (e) {
+      Alert.alert('Not saved', `${(e as Error).message}\n\nNothing was lost — check your connection and press Confirm again.`);
+    } finally { setBusy(false); setStep(null); }
   }
 
   async function fail() {
     setBusy(true);
+    let photoPath: string | null = null;
+    if (photos[0]) {
+      try { photoPath = await uploadPhoto(route!.org_id, o.id, `${clientId}-attempt`, photos[0]); }
+      catch (e) { setBusy(false); return Alert.alert('Photo not uploaded', (e as Error).message); }
+    }
     const p = await here();
     const { error } = await supabase.rpc('record_failed_attempt', {
-      p_stop_id: stop!.id, p_client_id: clientId, p_reason: reason, p_note: note || null, p_photo_path: null,
+      p_stop_id: stop!.id, p_client_id: clientId, p_reason: reason, p_note: note || null, p_photo_path: photoPath,
       p_lat: p.lat, p_lng: p.lng, p_calls: null, p_attempted_at: new Date().toISOString()
     });
     setBusy(false);
@@ -133,8 +164,14 @@ export default function StopScreen() {
             </View>
             {recipient !== 'customer' && <TextInput style={ui.input} placeholder="Name of the person" value={recipientName} onChangeText={setRecipientName} />}
             {cod > 0 && (<><Text style={ui.small}>Cash collected (€)</Text><TextInput style={[ui.input, { fontSize: 22, fontWeight: '600' }]} keyboardType="decimal-pad" value={cash} onChangeText={setCash} /></>)}
-            <Text style={ui.small}>Photo and signature capture are added in Stage 5. GPS and time are saved now.</Text>
-            <Pressable style={[ui.btn, { backgroundColor: colors.success }]} disabled={busy} onPress={deliver}><Text style={ui.btnText}>{busy ? 'Saving…' : 'Confirm delivery'}</Text></Pressable>
+            <Text style={ui.small}>Photo of the parcel</Text>
+            <Photos photos={photos} onAdd={() => setCamera(true)} onRemove={(i) => setPhotos(photos.filter((_, k) => k !== i))} />
+            <Text style={ui.small}>Signature</Text>
+            <SignaturePad onChange={setSignature} />
+            <Text style={ui.small}>GPS position and time are saved automatically.</Text>
+            <Pressable style={[ui.btn, { backgroundColor: colors.success, flexDirection: 'row', gap: 10 }]} disabled={busy} onPress={deliver}>
+              {busy && <ActivityIndicator color="#fff" />}<Text style={ui.btnText}>{busy ? step ?? 'Saving…' : 'Confirm delivery'}</Text>
+            </Pressable>
             <Pressable onPress={() => setMode('view')}><Text style={{ textAlign: 'center', color: colors.ink3 }}>Cancel</Text></Pressable>
           </View>
         )}
@@ -148,11 +185,32 @@ export default function StopScreen() {
               </Pressable>
             ))}
             <TextInput style={[ui.input, { minHeight: 70 }]} multiline placeholder="What happened? (called twice, gate closed…)" value={note} onChangeText={setNote} />
+            <Text style={ui.small}>Photo (optional) — e.g. the closed door</Text>
+            <Photos photos={photos.slice(0, 1)} max={1} onAdd={() => setCamera(true)} onRemove={() => setPhotos([])} />
             <Pressable style={[ui.btn, { backgroundColor: colors.warning }]} disabled={busy} onPress={fail}><Text style={ui.btnText}>{busy ? 'Saving…' : 'Save failed attempt'}</Text></Pressable>
             <Pressable onPress={() => setMode('view')}><Text style={{ textAlign: 'center', color: colors.ink3 }}>Cancel</Text></Pressable>
           </View>
         )}
       </ScrollView>
+      <CameraSheet visible={camera} mode="photo" onClose={() => setCamera(false)}
+        onPhoto={(uri) => { setPhotos((p) => [...p, uri].slice(-3)); setCamera(false); }} />
     </SafeAreaView>
+  );
+}
+
+function Photos({ photos, onAdd, onRemove, max = 3 }: { photos: string[]; onAdd: () => void; onRemove: (i: number) => void; max?: number }) {
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+      {photos.map((uri, i) => (
+        <Pressable key={uri} onLongPress={() => onRemove(i)} onPress={() => Alert.alert('Remove photo?', undefined, [{ text: 'Keep' }, { text: 'Remove', style: 'destructive', onPress: () => onRemove(i) }])}>
+          <Image source={{ uri }} style={{ width: 84, height: 84, borderRadius: 12, backgroundColor: colors.field }} />
+        </Pressable>
+      ))}
+      {photos.length < max && (
+        <Pressable onPress={onAdd} style={{ width: 84, height: 84, borderRadius: 12, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.brand, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.brandTint }}>
+          <Text style={{ fontSize: 26, color: colors.brandDeep }}>＋</Text><Text style={{ fontSize: 11, color: colors.brandDeep }}>Photo</Text>
+        </Pressable>
+      )}
+    </View>
   );
 }

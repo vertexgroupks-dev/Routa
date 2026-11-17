@@ -6,11 +6,26 @@ import { STOP_STATUS, euro, time, dateLong, todayKs } from '@routa/shared';
 import { supabase } from '../src/supabase';
 import { useTodayRoute } from '../src/useRoute';
 import { colors, mono, ui } from '../src/theme';
+import { CameraSheet } from '../src/CameraSheet';
+import { useTracking } from '../src/useTracking';
 
 export default function Today() {
   const router = useRouter();
   const { route, loading, error, reload } = useTodayRoute();
   const [busy, setBusy] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [scanLog, setScanLog] = useState<{ code: string; ok: boolean; text: string }[]>([]);
+  const sharing = useTracking(!!route && ['loading', 'in_progress'].includes(route.status));
+
+  async function onScan(code: string) {
+    if (!route) return;
+    const { data, error } = await supabase.rpc('driver_load_parcel', { p_route_id: route.id, p_code: code });
+    const r = data as { ok?: boolean; error?: string; code?: string } | null;
+    const ok = !error && r?.ok !== false;
+    const text = ok ? 'Loaded ✓' : error ? error.message : r?.error === 'not_on_this_route' ? 'Not on your route — put it aside' : 'Unknown parcel';
+    setScanLog((l) => [{ code: r?.code ?? code, ok, text }, ...l].slice(0, 6));
+    if (ok) reload();
+  }
 
   if (loading) return <View style={[ui.screen, { alignItems: 'center', justifyContent: 'center' }]}><ActivityIndicator color={colors.brand} /></View>;
 
@@ -72,6 +87,10 @@ export default function Today() {
                 <Stat label="Left" value={String(route.stops.length - done)} />
                 <Stat label="To load" value={String(toLoad)} />
               </View>
+              {sharing && <Text style={{ color: colors.lime, fontSize: 12 }}>● Sharing your location with the office</Text>}
+              {['published', 'loading'].includes(route.status) && toLoad > 0 && (
+                <Pressable style={[ui.btn, { backgroundColor: '#fff' }]} onPress={() => { setScanLog([]); setScanning(true); }}><Text style={[ui.btnText, { color: colors.night }]}>Scan parcels to load ({toLoad} left)</Text></Pressable>
+              )}
               {['published', 'loading'].includes(route.status) && (
                 <Pressable style={[ui.btn, { backgroundColor: colors.lime }]} disabled={busy} onPress={startRoute}><Text style={[ui.btnText, { color: colors.night }]}>{busy ? 'Starting…' : 'Start route'}</Text></Pressable>
               )}
@@ -104,6 +123,16 @@ export default function Today() {
           );
         }}
       />
+      <CameraSheet visible={scanning} mode="scan" onClose={() => setScanning(false)} onScan={onScan}
+        title={`Load parcels · ${toLoad} left`}
+        footer={
+          <View style={{ alignSelf: 'stretch', gap: 6 }}>
+            {scanLog.map((l, i) => (
+              <Text key={i} style={{ backgroundColor: l.ok ? 'rgba(15,159,95,0.9)' : 'rgba(217,45,32,0.9)', color: '#fff', padding: 10, borderRadius: 10, overflow: 'hidden', fontWeight: '600' }}>{l.code} · {l.text}</Text>
+            ))}
+            {!scanLog.length && <Text style={{ color: '#fff', textAlign: 'center', backgroundColor: 'rgba(0,0,0,0.5)', padding: 10, borderRadius: 10, overflow: 'hidden' }}>Point the camera at the barcode on each parcel label</Text>}
+          </View>
+        } />
     </SafeAreaView>
   );
 }

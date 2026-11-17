@@ -2,6 +2,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { MapView } from '@/components/MapView';
 
 const DEMO_ROLES = [
   { role: 'admin', label: 'Operations admin', body: 'Every screen of the office dashboard.' },
@@ -49,10 +50,12 @@ export function OnboardingForm({ fullName }: { fullName: string }) {
           <label className="label">Your phone<input className="input" value={f.phone} onChange={set('phone')} /></label>
           <label className="label">Hub name<input className="input" required value={f.hub} onChange={set('hub')} /></label>
           <label className="label sm:col-span-2">Hub address<input className="input" required value={f.address} onChange={set('address')} placeholder="Rr. Bajram Kelmendi 120, Prishtinë" /></label>
-          <label className="label">Hub latitude<input className="input font-mono" value={f.lat} onChange={set('lat')} /></label>
-          <label className="label">Hub longitude<input className="input font-mono" value={f.lng} onChange={set('lng')} /></label>
+          <div className="flex flex-col gap-1.5 sm:col-span-2">
+            <span className="text-[13px] font-medium">Where is the hub? Click the map or drag the pin to the entrance.</span>
+            <MapView height={260} pin={{ lat: Number(f.lat), lng: Number(f.lng) }} onPick={(p) => setF({ ...f, lat: p.lat.toFixed(6), lng: p.lng.toFixed(6) })} />
+          </div>
         </div>
-        <p className="text-xs text-ink-3">The map picker arrives with the Mapbox integration in Stage 3 — for now the default point is central Prishtinë.</p>
+        <p className="text-xs text-ink-3">Routes start and end at this point. You can change it later in Settings → Hub location.</p>
         {error && <p className="rounded-[10px] bg-danger-tint px-3 py-2 text-[13px] text-danger-ink">{error}</p>}
         <button disabled={!!busy} className="btn-primary self-start px-5 py-3">{busy === 'create' ? 'Creating…' : 'Create company'}</button>
       </form>

@@ -16,12 +16,13 @@ type Props = {
   center?: Pt;
   height?: number | string;
   className?: string;
+  keepView?: boolean;          // zoom to the data only the first time (live pages that refresh)
 };
 
 const esc = (s = '') => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 const PRISHTINA: Pt = { lat: 42.6629, lng: 21.1655 };
 
-export function MapView({ markers = [], lines = [], pin, onPick, center, height = 360, className = '' }: Props) {
+export function MapView({ markers = [], lines = [], pin, onPick, center, height = 360, className = '', keepView = false }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const map = useRef<any>(null);
   const L = useRef<any>(null);
@@ -94,7 +95,7 @@ export function MapView({ markers = [], lines = [], pin, onPick, center, height 
 
     // Zoom to what's on the map (only when the set of things changes, not on every pin drag)
     const key = `${markers.length}:${lines.length}:${markers.map((x) => `${x.lat.toFixed(3)},${x.lng.toFixed(3)}`).join('|')}:${pin ? 'pin' : ''}`;
-    if (key !== fitted.current) {
+    if (key !== fitted.current && !(keepView && fitted.current)) {
       fitted.current = key;
       if (pts.length === 1) m.setView(pts[0], 15);
       else if (pts.length > 1) m.fitBounds(pts, { padding: [36, 36], maxZoom: 16 });

@@ -6,7 +6,7 @@ export type Stop = {
   id: string; sequence: number; status: StopStatus; eta: string | null;
   order: { id: string; code: string; tracking_code: string; customer_name: string; customer_phone: string; address_line: string | null; city: string | null; landmark: string | null; address_details: Record<string, unknown> | null; notes_driver: string | null; cod_amount: number; parcels: number | null; weight_kg: number | null; window_start: string | null; window_end: string | null; lat: number | null; lng: number | null };
 };
-export type Route = { id: string; code: string; date: string; status: string; color: string | null; dock: string | null; planned_km: number | null; vehicle: { plate: string; model: string } | null; stops: Stop[] };
+export type Route = { id: string; org_id: string; code: string; date: string; status: string; color: string | null; dock: string | null; planned_km: number | null; vehicle: { plate: string; model: string } | null; stops: Stop[] };
 
 /** The driver's current route: today's, or the next published one (RLS only returns the driver's own, published routes). */
 export function useTodayRoute() {
@@ -18,7 +18,7 @@ export function useTodayRoute() {
     setError(null);
     const { data, error } = await supabase
       .from('routes')
-      .select('id, code, date, status, color, dock, planned_km, vehicle:vehicles(plate, model), stops:route_stops(id, sequence, status, eta, order:orders(id, code, tracking_code, customer_name, customer_phone, address_line, city, landmark, address_details, notes_driver, cod_amount, parcels, weight_kg, window_start, window_end, location))')
+      .select('id, org_id, code, date, status, color, dock, planned_km, vehicle:vehicles(plate, model), stops:route_stops(id, sequence, status, eta, order:orders(id, code, tracking_code, customer_name, customer_phone, address_line, city, landmark, address_details, notes_driver, cod_amount, parcels, weight_kg, window_start, window_end, location))')
       .gte('date', todayKs())
       .neq('status', 'cancelled')
       .order('date')

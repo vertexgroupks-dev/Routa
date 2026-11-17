@@ -9,7 +9,7 @@ export const NAV: NavGroup[] = [
     { label: 'Overview', href: '/overview', icon: 'dashboard', hint: 'Today at a glance' },
     { label: 'Orders', href: '/orders', icon: 'package', countKey: 'orders', hint: 'Every parcel' },
     { label: 'Dispatch', href: '/dispatch', icon: 'route', hint: 'Plan and publish routes' },
-    { label: 'Live map', href: '/live-map', icon: 'map', stage: 'the maps stage', hint: 'Drivers on the road' },
+    { label: 'Live map', href: '/live-map', icon: 'map', hint: 'Drivers on the road' },
     { label: 'Helpdesk', href: '/helpdesk', icon: 'headset', countKey: 'tickets', hint: 'Problems to solve' },
     { label: 'Proof of delivery', href: '/pod', icon: 'camera', countKey: 'pod', hint: 'Review flagged drops' }
   ] },

@@ -6,6 +6,7 @@ import { euro } from '@routa/shared';
 import { supabase } from '../src/supabase';
 import { useTodayRoute } from '../src/useRoute';
 import { colors, mono, ui } from '../src/theme';
+import QRCode from 'react-native-qrcode-svg';
 
 type Result = { ok: boolean; short_code: string; token: string; expected_cash: number; delivered: number; total: number; returns: number };
 
@@ -35,7 +36,8 @@ export default function EndOfDay() {
           </>
         ) : (
           <View style={{ backgroundColor: '#fff', borderRadius: 20, padding: 22, gap: 14, alignItems: 'center' }}>
-            <Text style={ui.small}>Show this code at the cash desk</Text>
+            <Text style={ui.small}>Show this at the cash desk</Text>
+            <QRCode value={res.token} size={190} color={colors.night} backgroundColor="#fff" />
             <Text style={{ fontSize: 44, fontWeight: '700', letterSpacing: 8, color: colors.ink, fontFamily: mono }}>{res.short_code}</Text>
             <Text style={{ fontSize: 15, color: colors.ink2 }}>Cash to hand in</Text>
             <Text style={{ fontSize: 34, fontWeight: '700', color: colors.ink }}>{euro(res.expected_cash)}</Text>
@@ -43,7 +45,7 @@ export default function EndOfDay() {
               <Text style={ui.small}>{res.delivered}/{res.total} delivered</Text>
               <Text style={ui.small}>· {res.returns} parcels back to hub</Text>
             </View>
-            <Text style={[ui.small, { textAlign: 'center' }]}>The QR version of this code arrives in Stage 5. The office can type the 6 digits today.</Text>
+            <Text style={[ui.small, { textAlign: 'center' }]}>The office scans the QR code or types the 6 digits.</Text>
           </View>
         )}
       </ScrollView>

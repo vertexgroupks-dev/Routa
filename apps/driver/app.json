@@ -8,7 +8,10 @@
     "userInterfaceStyle": "light",
     "ios": {
       "bundleIdentifier": "app.routa.driver",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Routa shares your location with the office while you are on a route."
+      }
     },
     "android": {
       "package": "app.routa.driver"
@@ -19,6 +22,13 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "Routa uses your location to confirm deliveries and show your position to the office."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Routa uses the camera to photograph delivered parcels and scan parcel labels.",
+          "recordAudioAndroid": false
         }
       ]
     ],

@@ -3,10 +3,15 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader, Pill, Empty, StatCard, Avatar, Accordion } from "@/components/ui";
 import { euro } from '@routa/shared';
 import { ZonePrice } from './ZonePrice';
+import { HubLocation } from './HubLocation';
 export const metadata = { title: 'Settings' };
 export default async function Page() {
   const ws = await requireStaff('/settings'); const sb = await createClient();
-  const { data: zones } = await sb.from('zones').select('id, name, color, base_fee, sla, cutoff_time, delivery_days, active').eq('org_id', ws.org.id).order('sort');
+  const [{ data: zones }, { data: hub }, { data: point }] = await Promise.all([
+    sb.from('zones').select('id, name, color, base_fee, sla, cutoff_time, delivery_days, active').eq('org_id', ws.org.id).order('sort'),
+    sb.from('hubs').select('id, name, address').eq('org_id', ws.org.id).order('is_default', { ascending: false }).order('created_at').limit(1).maybeSingle(),
+    sb.rpc('hub_point', { p_org: ws.org.id })
+  ]);
   const s = (ws.org.settings ?? {}) as Record<string, any>;
   return (<>
     <PageHeader title="Settings" subtitle="Zones, prices and delivery rules. New orders use these automatically." />
@@ -17,5 +22,6 @@ export default async function Page() {
       <div className="min-w-0 flex-[1_1_300px]"><Accordion title="Delivery rules" icon="settings"><div className="flex flex-col gap-2.5 p-5 text-[13px]">
         {[['Max delivery attempts', s.max_attempts], ['Included weight', `${s.base_weight_kg ?? 2} kg`], ['Extra per kg', euro(s.extra_kg_fee ?? 0)], ['COD fee', `${s.cod_fee_pct ?? 1}%`], ['Return fee', euro(s.return_fee ?? 0)], ['POD max distance', `${s.pod_max_distance_m ?? 150} m`], ['Language', s.default_locale === 'sq' ? 'Shqip' : 'English']].map(([k, v]) => <span key={String(k)} className="flex justify-between"><span className="text-ink-3">{k}</span><span className="font-mono">{String(v ?? '—')}</span></span>)}</div></Accordion></div>
     </div>
+    {hub && <Accordion title="Hub location" icon="map"><div className="p-5"><HubLocation hubId={hub.id} name={hub.name} address={hub.address} point={point?.lat != null ? { lat: point.lat, lng: point.lng } : null} /></div></Accordion>}
   </>);
 }

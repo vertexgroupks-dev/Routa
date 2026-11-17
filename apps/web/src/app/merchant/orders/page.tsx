@@ -31,7 +31,7 @@ export default async function MerchantOrders({ searchParams }: { searchParams: P
             </tr>
           ))}</tbody>
         </table>
-        {(orders ?? []).length === 0 && <Empty title="No orders yet" body="Create your first order above, or import a CSV (Stage 3)." />}
+        {(orders ?? []).length === 0 && <Empty title="No orders yet" body="Create your first order above, or upload many at once under Import." />}
       </section>
     </>
   );
