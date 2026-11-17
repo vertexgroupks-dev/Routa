@@ -1,183 +1,335 @@
 import Link from 'next/link';
-import { Logo } from '@/components/Logo';
-import { Icon, type IconName } from '@/components/Icon';
+import type { Metadata } from 'next';
+import { Schibsted_Grotesk } from 'next/font/google';
+import { Logo, LogoMark, Wordmark } from '@/components/Logo';
+import { LiveRouteMap } from '@/components/landing/LiveRouteMap';
+import { CountUp, PlanCompare, ProductTour, type TourTab } from '@/components/landing/Interactive';
+import { OverviewView, DispatchView, LiveMapView, PhoneView, CashView, WarehouseView, Frame } from '@/components/landing/Views';
 
-const FEATURES: { icon: IconName; title: string; body: string; wide?: boolean }[] = [
-  { icon: 'route', title: 'Dispatch that plans itself', body: 'Orders are grouped by zone and sequenced per driver with van capacity, time windows and shifts in mind. Drag, adjust, publish.', wide: true },
-  { icon: 'navigation', title: 'A driver app built for the road', body: 'Stops in order, one-tap navigation and calling, cash checks and offline-safe saves.' },
-  { icon: 'camera', title: 'Proof on every drop', body: 'Recipient, GPS and time on each delivery. Deliveries far from the address are flagged for review.' },
-  { icon: 'wallet', title: 'Every euro reconciled', body: 'Cash on delivery tracked per driver, checked in with a 6-digit code, paid out to merchants weekly with invoices.', wide: true },
-  { icon: 'warehouse', title: 'Warehouse & fulfilment', body: 'Receive merchant stock, reserve it per order, pick and pack by route, restock returns.' },
-  { icon: 'store', title: 'A portal for every shop', body: 'Merchants create orders, import CSVs, connect by API, and follow balances and payouts.' }
-];
-const STEPS = [
-  ['01', 'Orders come in', 'From the merchant portal, CSV, API or the front desk. Zone, price and date are set instantly.'],
-  ['02', 'Routes go out', 'Dispatch builds and publishes routes. Warehouse gets pick lists, drivers get their day.'],
-  ['03', 'Parcels get delivered', 'Drivers follow the route, customers follow a live tracking page.'],
-  ['04', 'Money closes itself', 'Cash is checked in, merchants are paid, invoices are issued — automatically.']
-];
-const PLANS = [
-  { name: 'Starter', price: '€49', note: 'Up to 5 drivers · 1 warehouse', items: ['Dispatch & driver app', 'Proof of delivery', 'Cash on delivery tracking', 'Merchant portal'] },
-  { name: 'Growth', price: '€149', note: 'Up to 20 drivers · 3 warehouses', popular: true, items: ['Everything in Starter', 'Warehouse & fulfilment', 'Payouts, invoices & payroll', 'API & webhooks for shops', 'Customer SMS'] },
-  { name: 'Enterprise', price: 'Custom', note: 'Unlimited drivers & hubs', items: ['Dedicated onboarding', 'Custom integrations', 'Priority support', 'Multi-country fleets'] }
-];
-const FAQ = [
-  ['Do my drivers need new phones?', 'No. The driver app runs on any recent Android or iPhone.'],
-  ['Can my merchants send orders automatically?', 'Yes — by CSV import, by API with their own key, or from the merchant portal. Webhooks tell their shop when a parcel is delivered.'],
-  ['How does cash on delivery work?', 'Drivers record the cash at every drop. At the end of the shift the office types their 6-digit code, counts the cash and confirms. Merchant balances update by themselves.'],
-  ['Is it available in Albanian?', 'Yes. Customer messages and the driver app are in Shqip, the office can work in Shqip or English.']
+const grotesk = Schibsted_Grotesk({ subsets: ['latin', 'latin-ext'], weight: ['400', '500', '600', '700', '800'], variable: '--font-landing' });
+
+export const metadata: Metadata = {
+  title: 'Routa — the operating system for delivery companies',
+  description: 'AI route planning, a driver app with proof of delivery, live tracking, cash on delivery, warehouse, finance and HR in one platform. Built in Prishtina.'
+};
+
+// Where "Talk to sales" goes. Replace with your sales email, WhatsApp or booking link.
+const SALES_HREF = 'https://vertex-growth.co';
+
+const TOUR: TourTab[] = [
+  { key: 'overview', label: 'Overview', color: '#C7C9FF', title: 'The whole day on one screen.', body: 'Orders, deliveries, problems and cash in real time. Every route’s progress, and the few things that need a person — a customer who didn’t answer, an address without a pin.', view: <OverviewView /> },
+  { key: 'dispatch', label: 'Dispatch', color: '#C8F25C', title: 'Plan every route with one button.', body: 'Routa reads the day’s orders, the free drivers and the size of every van, then publishes a plan the dispatcher only has to check. Choose to finish sooner or to spend less fuel.', view: <DispatchView /> },
+  { key: 'live', label: 'Live map', color: '#9DE9F7', title: 'Know where every van is.', body: 'Drivers share their position while they work. The office sees each route, each stop done and each stop left — and the customer gets a tracking page with the van approaching.', view: <LiveMapView /> },
+  { key: 'driver', label: 'Driver app', color: '#FBCFE8', title: 'A driver app that proves every delivery.', body: 'Scan parcels into the van, navigate stop by stop, call the customer, collect cash. Each delivery closes with a photo, a signature and the GPS point.', view: <PhoneView /> },
+  { key: 'cash', label: 'Cash desk', color: '#C8F25C', title: 'Every euro of cash on delivery, counted.', body: 'At the end of the shift the driver shows a QR code. Finance sees exactly which orders the money is for, counts it and confirms. Shops’ balances update on the spot.', view: <CashView /> },
+  { key: 'warehouse', label: 'Warehouse', color: '#9DE9F7', title: 'Fulfilment for the shops you deliver for.', body: 'Receive shops’ stock into bins, reserve it per order and pick by route, loaded in reverse stop order so the first delivery is at the door of the van.', view: <WarehouseView /> }
 ];
 
-function ProductShot() {
-  const routes = [['#5B5CF6', 'PR-01', 'Driton H.', 11, 14], ['#0F9F5F', 'PR-02', 'Blerim K.', 9, 18], ['#D9740B', 'PR-03', 'Fatlind M.', 12, 12], ['#1D72D8', 'PR-04', 'Arta S.', 6, 16]] as const;
-  return (
-    <div className="relative">
-      <div className="absolute -inset-8 rounded-[40px] bg-[radial-gradient(closest-side,rgb(91_92_246/0.45),transparent)] blur-2xl" />
-      <div className="relative rounded-[26px] border border-white/15 bg-white/[.07] p-3 shadow-2xl backdrop-blur-xl">
-        <div className="rounded-[18px] border border-white/10 bg-[#0F1428]/90 p-5">
-          <div className="mb-4 flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-white/20" /><span className="h-2.5 w-2.5 rounded-full bg-white/20" /><span className="h-2.5 w-2.5 rounded-full bg-white/20" /><span className="ml-3 text-[12px] text-white/50">Today · Prishtinë hub</span></div>
-          <div className="mb-4 grid grid-cols-3 gap-2">
-            {[['Delivered', '182'], ['On the road', '41'], ['Cash in', '€9.8k']].map(([k, v]) => <div key={k} className="rounded-xl bg-white/[.06] p-3"><p className="text-[11px] text-white/50">{k}</p><p className="text-lg font-semibold text-white">{v}</p></div>)}
-          </div>
-          <div className="flex flex-col gap-2">
-            {routes.map(([c, code, name, d, t]) => (
-              <div key={code} className="flex items-center gap-3 rounded-xl bg-white/[.04] px-3 py-2.5">
-                <span className="h-2 w-2 rounded-full" style={{ background: c }} />
-                <span className="w-14 font-mono text-[12px] text-white/60">{code}</span>
-                <span className="flex-1 text-[13px] text-white">{name}</span>
-                <span className="h-1.5 w-24 overflow-hidden rounded-full bg-white/10"><span className="block h-full rounded-full" style={{ width: `${(d / t) * 100}%`, background: c }} /></span>
-                <span className="w-10 text-right font-mono text-[12px] text-white/70">{d}/{t}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-      <div className="absolute -bottom-6 -left-6 hidden rounded-2xl border border-white/20 bg-white/80 p-3.5 shadow-xl backdrop-blur-xl md:block">
-        <p className="text-[11px] font-medium text-ink-3">Delivered · KS-20412</p>
-        <p className="text-[13px] font-semibold text-ink">Signed by Liridona · 12 m from address</p>
-      </div>
-    </div>
-  );
-}
+const MODULES: { name: string; color: string; text: string; items: string[]; span?: string }[] = [
+  { name: 'Dispatch & AI planning', color: '#4A49E3', text: 'Routes planned on real roads in seconds.', items: ['Capacity, parcels and working hours', 'Re-plan any time', 'Publish to drivers'], span: 'lg:col-span-2' },
+  { name: 'Driver app', color: '#DB2777', text: 'Android and iPhone.', items: ['Scan to load', 'Photo + signature', 'Live location'] },
+  { name: 'Warehouse', color: '#0891B2', text: 'Stock, bins and returns.', items: ['Inbound receiving', 'Pick & pack by route', 'Returns check-in'] },
+  { name: 'Finance', color: '#5E8F00', text: 'Cash on delivery, payouts, invoices.', items: ['Cash desk with QR', 'Weekly shop payouts', 'Monthly invoices'] },
+  { name: 'Helpdesk', color: '#E8590C', text: 'Every failed delivery becomes a task.', items: ['Call-backs', 'Move to another day', 'Proof review'] },
+  { name: 'People', color: '#7C3AED', text: 'Drivers, fleet and payroll.', items: ['Salary, per-stop or hourly', 'Licence & service dates'] },
+  { name: 'Shop portal & API', color: '#0F766E', text: 'The shops you deliver for, connected.', items: ['Orders, stock, payouts', 'CSV import', 'API keys & webhooks'] }
+];
+
+const DAY: [string, string, string][] = [
+  ['Day before', 'Orders arrive', 'Until the 12:00 cut-off, shops send orders from their portal, a CSV file or the API. Zone, price and delivery day are set automatically.'],
+  ['07:30', 'Routes are planned', 'The dispatcher presses Plan routes, checks the map and publishes. Every driver gets their route on the phone.'],
+  ['08:00', 'Vans are loaded', 'The warehouse picks by route; drivers scan each parcel label into the van.'],
+  ['08:30', 'Parcels go out', 'Navigation, calls, photo, signature and cash at every stop. The office watches the live map.'],
+  ['17:30', 'Cash comes back', 'QR code at the cash desk, counted against the orders. Shops’ balances update.'],
+  ['Friday', 'Shops get paid', 'Payouts and invoices for every shop, prepared in one go.']
+];
+
+const FAQ: [string, string][] = [
+  ['How does the AI plan routes?', 'It places every address on the map (including neighbourhood addresses like “Dardania, hyrja 4”), measures real driving distance and time between every pair of stops, splits the orders between your free vans by weight, parcels and working hours, and orders each van’s stops for the shortest drive. The dispatcher reviews and publishes.'],
+  ['Our customers don’t give exact addresses. Will it work?', 'Yes. Routa understands Prishtina’s neighbourhoods and landmarks. When an address can’t be found, the dispatcher drops a pin once and Routa remembers it for that customer.'],
+  ['Do drivers need special phones?', 'No. The driver app runs on any recent Android phone or iPhone.'],
+  ['Can each employee see only their part?', 'Yes. Dispatch, warehouse, helpdesk, finance and HR each see only the screens for their job, and the database enforces the same rules.'],
+  ['How is Routa priced?', 'Per company, based on the size of your fleet and the number of hubs — not per parcel and not per user. Talk to us and we’ll prepare an offer for your company.']
+];
+
+const Pill = ({ children }: { children: React.ReactNode }) => (
+  <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-[13.5px] font-medium text-white/85 backdrop-blur">
+    <span className="h-1.5 w-1.5 rounded-full bg-[#C8F25C] shadow-[0_0_10px_#C8F25C]" />{children}
+  </span>
+);
 
 export default function Landing() {
   return (
-    <div className="bg-white text-ink">
-      <section className="relative overflow-hidden bg-night text-white">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(900px_500px_at_15%_0%,rgb(91_92_246/0.35),transparent_60%),radial-gradient(700px_500px_at_100%_20%,rgb(200_242_90/0.14),transparent_60%)]" />
-        <div className="pointer-events-none absolute inset-0 opacity-[.07] [background-image:linear-gradient(white_1px,transparent_1px),linear-gradient(90deg,white_1px,transparent_1px)] [background-size:56px_56px] [mask-image:radial-gradient(ellipse_at_50%_20%,black,transparent_75%)]" />
-        <nav className="relative mx-auto flex max-w-[1200px] items-center gap-8 px-6 py-5">
-          <Logo light />
-          <span className="hidden flex-1 gap-7 text-[14px] text-white/60 md:flex">
-            <a href="#product" className="hover:text-white">Product</a><a href="#how" className="hover:text-white">How it works</a><a href="#pricing" className="hover:text-white">Pricing</a><a href="#faq" className="hover:text-white">FAQ</a>
-          </span>
-          <span className="ml-auto flex items-center gap-2 md:ml-0">
-            <Link href="/login" className="rounded-xl px-3.5 py-2 text-[14px] font-medium text-white/80 hover:text-white">Sign in</Link>
-            <Link href="/register" className="rounded-xl bg-white px-4 py-2 text-[14px] font-semibold text-night hover:bg-lime">Start free</Link>
-          </span>
-        </nav>
-        <div className="relative mx-auto grid max-w-[1200px] items-center gap-14 px-6 pb-28 pt-14 lg:grid-cols-[1.05fr_1fr]">
-          <div className="flex flex-col gap-7">
-            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/[.06] py-1 pl-1 pr-3.5 text-[13px] text-white/70 backdrop-blur">
-              <span className="rounded-full bg-lime px-2 py-0.5 text-[11px] font-bold text-night">NEW</span>Built for couriers in Kosovo
-            </span>
-            <h1 className="text-[46px] font-semibold leading-[1.04] tracking-[-2px] sm:text-[64px]">The operating system for <span className="bg-gradient-to-r from-lime to-[#9EE6FF] bg-clip-text text-transparent">last-mile delivery.</span></h1>
-            <p className="max-w-[520px] text-[18px] leading-8 text-white/65">Orders, routes, drivers, warehouse and cash on delivery — in one calm control room for the office, and one simple app for the road.</p>
-            <div className="flex flex-wrap items-center gap-3">
-              <Link href="/register" className="rounded-2xl bg-lime px-6 py-3.5 text-[15px] font-semibold text-night shadow-[0_10px_30px_-10px_rgb(200_242_90/0.6)] hover:brightness-105">Start 14-day free trial</Link>
-              <a href="#how" className="rounded-2xl border border-white/15 bg-white/[.06] px-6 py-3.5 text-[15px] font-medium backdrop-blur hover:bg-white/10">See how it works</a>
+    <div className={`${grotesk.variable} landing min-h-screen overflow-x-clip bg-[#F4F6FF] text-[#0B1030]`} style={{ fontFamily: 'var(--font-landing), system-ui, sans-serif' }}>
+      <style>{`
+        .night-tiles { filter: invert(1) hue-rotate(205deg) brightness(.78) contrast(1.15) saturate(.55); }
+        .landing .leaflet-control-attribution { background: rgba(7,11,36,.7); color: rgba(255,255,255,.55); }
+        .landing .leaflet-control-attribution a { color: rgba(255,255,255,.75); }
+        .landing ::selection { background: #C8F25C; color: #0B1030; }
+        .landing a:focus-visible, .landing button:focus-visible, .landing input:focus-visible, .landing summary:focus-visible { outline: 2px solid #8B8AFF; outline-offset: 3px; border-radius: 10px; }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(-8px) scale(.97); } to { opacity: 1; transform: none; } }
+        .toast-in { animation: toastIn .35s ease-out; }
+        @keyframes fadeSwap { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+        .fade-swap { animation: fadeSwap .45s ease-out; }
+        @keyframes tourBar { from { width: 0; } to { width: 100%; } }
+        .tour-progress { animation: tourBar 6.5s linear forwards; }
+        @keyframes vanPulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+        .van-pulse { animation: vanPulse 1.6s ease-in-out infinite; }
+        @keyframes drift { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(30px, -20px); } }
+        .glow { animation: drift 14s ease-in-out infinite; }
+        @keyframes heroIn { from { opacity: 0; transform: translateY(24px) scale(.98); } to { opacity: 1; transform: none; } }
+        .hero-in { animation: heroIn .9s cubic-bezier(.2,.7,.2,1) .15s both; }
+        @media (prefers-reduced-motion: reduce) { .toast-in, .fade-swap, .tour-progress, .van-pulse, .glow, .hero-in { animation: none !important; } }
+      `}</style>
+
+      {/* ───────────── Hero ───────────── */}
+      <section className="relative overflow-hidden bg-[#0E1325] text-white">
+
+        <header className="relative mx-auto flex max-w-[1240px] items-center gap-3 px-5 py-5 sm:gap-6 sm:px-8">
+          <Logo light dark />
+          <nav className="ml-6 hidden gap-7 text-[15px] text-white/70 lg:flex">
+            <a href="#ai" className="hover:text-white">AI planning</a>
+            <a href="#product" className="hover:text-white">Product</a>
+            <a href="#platform" className="hover:text-white">Platform</a>
+            <a href="#pricing" className="hover:text-white">Pricing</a>
+          </nav>
+          <div className="ml-auto flex items-center gap-2">
+            <Link href="/login" className="whitespace-nowrap rounded-xl px-2.5 py-2 text-[14px] font-medium text-white/85 hover:bg-white/10 sm:px-3.5 sm:text-[15px]">Sign in</Link>
+            <a href={SALES_HREF} className="whitespace-nowrap rounded-xl bg-[#C8F25C] px-3.5 py-2.5 text-[14px] font-semibold text-[#0B1030] hover:bg-[#D9F88A] sm:px-4 sm:text-[15px]">Talk to sales</a>
+          </div>
+        </header>
+
+        <div className="relative mx-auto max-w-[1240px] px-5 pb-10 pt-10 sm:px-8 lg:pt-16">
+          <div className="max-w-[880px]">
+            <Pill>AI route planning, live in Prishtina</Pill>
+            <h1 className="mt-6 text-[46px] font-extrabold leading-[0.98] tracking-[-0.045em] sm:text-[78px]">
+              The operating system for <span className="bg-gradient-to-r from-[#A5A4FF] via-[#7DE3F8] to-[#C8F25C] bg-clip-text text-transparent">delivery companies</span>.
+            </h1>
+            <p className="mt-7 max-w-[40em] text-[18.5px] leading-[1.6] text-white/70">
+              Routa plans every route with AI, sends drivers the shortest way on real roads, proves every delivery and counts every euro of cash. Dispatch, warehouse, drivers, finance and HR — one platform, one login per person.
+            </p>
+            <div className="mt-9 flex flex-wrap gap-3">
+              <a href={SALES_HREF} className="rounded-2xl bg-[#C8F25C] px-6 py-4 text-[16.5px] font-semibold text-[#0B1030] shadow-[0_10px_40px_-10px_#C8F25C] hover:bg-[#D9F88A]">Talk to sales</a>
+              <a href="#ai" className="rounded-2xl border border-white/20 bg-white/5 px-6 py-4 text-[16.5px] font-semibold text-white backdrop-blur hover:bg-white/10">Watch it plan</a>
             </div>
-            <span className="text-[13px] text-white/45">No credit card · Shqip & English · Data hosted in the EU</span>
           </div>
-          <ProductShot />
-        </div>
-      </section>
 
-      <section className="border-b border-line bg-white">
-        <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-center gap-x-10 gap-y-3 px-6 py-7 text-[14px] text-ink-3">
-          <span className="font-medium text-ink">Made for</span><span>Courier companies</span><span className="text-line">•</span><span>E-commerce warehouses</span><span className="text-line">•</span><span>Online shops</span><span className="text-line">•</span><span>Prishtinë · Prizren · Pejë · Gjakovë · Ferizaj</span>
-        </div>
-      </section>
-
-      <section id="product" className="relative overflow-hidden bg-[#F4F5FA]">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(700px_400px_at_90%_10%,rgb(200_242_90/0.25),transparent_60%),radial-gradient(700px_500px_at_0%_80%,rgb(91_92_246/0.15),transparent_60%)]" />
-        <div className="relative mx-auto flex max-w-[1200px] flex-col gap-12 px-6 py-24">
-          <div className="flex max-w-[640px] flex-col gap-4">
-            <span className="eyebrow text-brand">Platform</span>
-            <h2 className="text-[40px] font-semibold leading-[1.1] tracking-[-1.4px]">Everything a delivery company runs on.</h2>
-            <p className="text-[17px] leading-7 text-ink-2">Replace WhatsApp groups, spreadsheets and paper receipts with one connected system — the office, the warehouse and every driver on the same page.</p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {FEATURES.map((f) => (
-              <div key={f.title} className={`card flex flex-col gap-4 p-7 ${f.wide ? 'md:col-span-2' : ''}`}>
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-ink text-lime"><Icon name={f.icon} size={20} color="currentColor" /></span>
-                <h3 className="text-[18px] font-semibold tracking-[-0.3px]">{f.title}</h3>
-                <p className="max-w-[520px] text-[15px] leading-7 text-ink-2">{f.body}</p>
+          <div className="hero-in relative mt-14">
+            <div className="relative overflow-hidden rounded-[26px] border border-white/15 bg-[#0B1030] shadow-[0_40px_80px_-30px_rgb(0_0_0/0.6)]">
+              <div className="flex items-center gap-2 border-b border-white/10 bg-white/[.03] px-4 py-3">
+                <span className="h-2.5 w-2.5 rounded-full bg-[#FF6159]" /><span className="h-2.5 w-2.5 rounded-full bg-[#FFBD2E]" /><span className="h-2.5 w-2.5 rounded-full bg-[#28C941]" />
+                <span className="ml-3 rounded-md bg-white/5 px-3 py-1 text-[12px] text-white/50">routa.app/live-map</span>
+                <span className="ml-auto hidden items-center gap-2 text-[12px] text-white/60 sm:flex"><span className="h-2 w-2 animate-pulse rounded-full bg-[#C8F25C]" />Live, Prishtinë</span>
               </div>
-            ))}
+              <div className="h-[420px] sm:h-[520px]"><LiveRouteMap /></div>
+            </div>
           </div>
+        </div>
+
+        {/* proof numbers */}
+        <div className="relative mx-auto grid max-w-[1240px] gap-8 px-5 pb-20 pt-12 sm:grid-cols-2 sm:px-8 lg:grid-cols-4">
+          {[
+            [<CountUp key="a" to={59} suffix="%" />, 'less driving', '155 km down to 63 km on a 40-address test day'],
+            [<CountUp key="b" to={2.7} decimals={1} suffix="×" />, 'sooner back at the hub', '4 vans finish in about 40 minutes instead of one van in 1 h 48'],
+            [<span key="c">1 click</span>, 'from orders to routes', 'addresses placed, vans filled, stops ordered'],
+            [<CountUp key="d" to={6} />, 'teams in one system', 'dispatch, warehouse, drivers, helpdesk, finance, HR']
+          ].map(([n, l, s], i) => (
+            <div key={i} className="border-l-2 border-[#C8F25C]/70 pl-5">
+              <div className="text-[46px] font-extrabold leading-none tracking-[-0.04em]">{n}</div>
+              <div className="mt-2 text-[16px] font-semibold">{l as string}</div>
+              <div className="mt-1 text-[14px] text-white/55">{s as string}</div>
+            </div>
+          ))}
+          <p className="text-[12.5px] text-white/35 sm:col-span-2 lg:col-span-4">Results from Routa’s planner on test orders across Prishtina, November 2026.</p>
         </div>
       </section>
 
-      <section id="how" className="bg-white">
-        <div className="mx-auto flex max-w-[1200px] flex-col gap-12 px-6 py-24">
-          <div className="flex flex-col gap-4"><span className="eyebrow text-brand">How it works</span><h2 className="text-[40px] font-semibold tracking-[-1.4px]">From order to cash, without the chaos.</h2></div>
-          <ol className="grid gap-8 md:grid-cols-4">
-            {STEPS.map(([n, t, b]) => (
-              <li key={n} className="relative flex flex-col gap-3 border-t-2 border-ink pt-5">
-                <span className="font-mono text-[13px] text-ink-3">{n}</span>
-                <h3 className="text-[18px] font-semibold">{t}</h3>
-                <p className="text-[15px] leading-7 text-ink-2">{b}</p>
+      {/* ───────────── AI ───────────── */}
+      <section id="ai" className="relative overflow-hidden bg-[#0E1325] text-white">
+        <div className="mx-auto max-w-[1240px] px-5 py-24 sm:px-8">
+          <div className="max-w-[760px]">
+            <h2 className="text-[38px] font-extrabold leading-[1.05] tracking-[-0.035em] sm:text-[54px]">AI that saves kilometres, fuel and hours — every single morning.</h2>
+            <p className="mt-5 text-[18px] leading-[1.6] text-white/65">Planning 40 deliveries by hand takes an hour and still zig-zags across the city. Routa does it in seconds, on real roads, within each van’s capacity and the drivers’ working hours.</p>
+          </div>
+          <div className="mt-14"><PlanCompare /></div>
+          <ol className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ['Reads every address', 'Streets, neighbourhoods and landmarks become exact points on the map. Corrected pins are remembered.', '#8B8AFF'],
+              ['Measures real roads', 'Driving distance and time between every pair of stops, from the actual street network.', '#38D6F5'],
+              ['Fills the vans', 'Orders are shared between free drivers by weight, parcel count and working hours.', '#F472B6'],
+              ['Orders the stops', 'Each route is untangled until no swap makes it shorter, then published to the driver.', '#C8F25C']
+            ].map(([t, b, c], i) => (
+              <li key={t} className="rounded-3xl border border-white/10 bg-white/[.04] p-6 backdrop-blur">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl text-[15px] font-extrabold text-[#0B1030]" style={{ background: c }}>{i + 1}</span>
+                <h3 className="mt-4 text-[18px] font-bold">{t}</h3>
+                <p className="mt-2 text-[15px] leading-[1.6] text-white/60">{b}</p>
               </li>
             ))}
           </ol>
         </div>
       </section>
 
-      <section id="pricing" className="bg-[#F4F5FA]">
-        <div className="mx-auto flex max-w-[1200px] flex-col gap-12 px-6 py-24">
-          <div className="flex flex-col items-center gap-4 text-center"><span className="eyebrow text-brand">Pricing</span><h2 className="text-[40px] font-semibold tracking-[-1.4px]">Simple pricing that grows with your fleet.</h2><p className="text-[16px] text-ink-2">Unlimited orders on every plan. Cancel anytime.</p></div>
-          <div className="grid gap-4 lg:grid-cols-3">
-            {PLANS.map((p) => (
-              <div key={p.name} className={`flex flex-col gap-6 rounded-3xl p-8 ${p.popular ? 'bg-night text-white shadow-2xl' : 'card'}`}>
-                <div className="flex items-center justify-between"><span className="text-[16px] font-semibold">{p.name}</span>{p.popular && <span className="rounded-full bg-lime px-2.5 py-0.5 text-[12px] font-bold text-night">Most popular</span>}</div>
-                <div><span className="text-[44px] font-semibold tracking-[-1.5px]">{p.price}</span>{p.price.startsWith('€') && <span className={p.popular ? 'text-white/50' : 'text-ink-3'}> / month</span>}<p className={`mt-1 text-[14px] ${p.popular ? 'text-white/60' : 'text-ink-3'}`}>{p.note}</p></div>
-                <Link href="/register" className={`rounded-2xl py-3.5 text-center text-[15px] font-semibold ${p.popular ? 'bg-lime text-night' : 'bg-ink text-white'}`}>{p.price === 'Custom' ? 'Talk to us' : 'Start free trial'}</Link>
-                <ul className="flex flex-col gap-3 text-[14px]">{p.items.map((i) => <li key={i} className="flex gap-2.5"><Icon name="check" size={17} color={p.popular ? '#C8F25A' : '#0F9F5F'} strokeWidth={2.2} />{i}</li>)}</ul>
+      {/* ───────────── Product tour ───────────── */}
+      <section id="product" className="relative">
+        <div aria-hidden className="pointer-events-none absolute right-0 top-20 h-[420px] w-[420px] rounded-full bg-[#C7C9FF] opacity-50 blur-[120px]" />
+        <div className="relative mx-auto max-w-[1240px] px-5 py-24 sm:px-8">
+          <h2 className="max-w-[760px] text-[38px] font-extrabold leading-[1.05] tracking-[-0.035em] sm:text-[54px]">See your company run itself.</h2>
+          <p className="mt-5 max-w-[40em] text-[18px] leading-[1.6] text-[#3E4659]">Every screen below is from Routa, filled with the routes our planner made for a morning in Prishtina.</p>
+          <div className="mt-12"><ProductTour tabs={TOUR} /></div>
+        </div>
+      </section>
+
+      {/* ───────────── Platform bento ───────────── */}
+      <section id="platform" className="bg-white">
+        <div className="mx-auto max-w-[1240px] px-5 py-24 sm:px-8">
+          <h2 className="max-w-[820px] text-[38px] font-extrabold leading-[1.05] tracking-[-0.035em] sm:text-[54px]">Manage the whole company from one platform.</h2>
+          <p className="mt-5 max-w-[40em] text-[18px] leading-[1.6] text-[#3E4659]">No spreadsheets passed between teams. Each person signs in and sees exactly the screens their job needs.</p>
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {MODULES.map((m) => (
+              <div key={m.name} className={`group relative overflow-hidden rounded-3xl p-7 text-white ${m.span ?? ''}`} style={{ background: `linear-gradient(145deg, ${m.color}, ${m.color}CC)` }}>
+                <div aria-hidden className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-white/15 blur-2xl transition-transform duration-500 group-hover:scale-125" />
+                <h3 className="relative text-[21px] font-bold">{m.name}</h3>
+                <p className="relative mt-1 text-[15px] text-white/80">{m.text}</p>
+                <ul className="relative mt-5 flex flex-wrap gap-2">
+                  {m.items.map((it) => <li key={it} className="rounded-full bg-white/15 px-3 py-1.5 text-[13.5px] font-medium backdrop-blur">{it}</li>)}
+                </ul>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="faq" className="bg-white">
-        <div className="mx-auto grid max-w-[1200px] gap-12 px-6 py-24 lg:grid-cols-[1fr_1.4fr]">
-          <div className="flex flex-col gap-4"><span className="eyebrow text-brand">FAQ</span><h2 className="text-[40px] font-semibold tracking-[-1.4px]">Questions couriers ask us.</h2></div>
-          <div className="flex flex-col divide-y divide-line border-y border-line">
-            {FAQ.map(([q, a]) => (
-              <details key={q} className="group py-5 [&_summary::-webkit-details-marker]:hidden">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[17px] font-medium">{q}<Icon name="plus" size={18} color="#6B7389" className="transition-transform group-open:rotate-45" /></summary>
-                <p className="mt-3 text-[15px] leading-7 text-ink-2">{a}</p>
-              </details>
-            ))}
+      {/* ───────────── A day ───────────── */}
+      <section className="mx-auto max-w-[1240px] px-5 py-24 sm:px-8">
+        <h2 className="text-[38px] font-extrabold tracking-[-0.035em] sm:text-[54px]">A day with Routa</h2>
+        <ol className="relative mt-14 grid gap-8 lg:grid-cols-6 lg:gap-5">
+          <div aria-hidden className="absolute left-0 right-0 top-[22px] hidden h-[3px] rounded-full bg-gradient-to-r from-[#4A49E3] via-[#38D6F5] to-[#C8F25C] lg:block" />
+          {DAY.map(([time, title, body]) => (
+            <li key={time} className="relative flex flex-col gap-2">
+              <span className="relative z-10 flex h-11 w-fit items-center rounded-full border-[3px] border-[#F4F6FF] bg-[#0B1030] px-4 text-[14px] font-bold text-white">{time}</span>
+              <span className="mt-2 text-[17px] font-bold">{title}</span>
+              <span className="text-[14.5px] leading-[1.55] text-[#3E4659]">{body}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {/* ───────────── Built for the job ───────────── */}
+      <section className="bg-white">
+        <div className="mx-auto grid max-w-[1240px] gap-12 px-5 py-24 sm:px-8 lg:grid-cols-2 lg:items-center">
+          <div>
+            <h2 className="text-[38px] font-extrabold leading-[1.05] tracking-[-0.035em] sm:text-[48px]">Built for how Kosovo delivers.</h2>
+            <ul className="mt-8 grid gap-5 text-[16.5px] leading-[1.55]">
+              {[
+                ['Addresses people actually write', 'Neighbourhoods, entrances and landmarks are understood, and every corrected pin is remembered for that customer.', '#4A49E3'],
+                ['Cash on delivery, first-class', 'Each euro is tied to an order, counted at the desk and paid out to the shop — with differences flagged automatically.', '#5E8F00'],
+                ['Proof that holds up', 'Photo, signature, time and GPS on every delivery. The office can review a proof but never change the evidence.', '#DB2777'],
+                ['Each person sees their part', 'Seven office roles plus drivers and shops, enforced in the database itself, not just hidden in the menu.', '#0891B2']
+              ].map(([t, b, c]) => (
+                <li key={t} className="flex gap-4">
+                  <span className="mt-1.5 h-3 w-3 flex-none rounded-full" style={{ background: c, boxShadow: `0 0 0 5px ${c}22` }} />
+                  <span><b className="font-bold">{t}.</b> <span className="text-[#3E4659]">{b}</span></span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="relative">
+            <div aria-hidden className="absolute -inset-6 rounded-[40px] bg-gradient-to-br from-[#C7C9FF] via-[#9DE9F7] to-[#E9FBB5] opacity-70 blur-2xl" />
+            <div className="relative"><Frame url="/pod"><ProofList /></Frame></div>
           </div>
         </div>
       </section>
 
-      <section className="px-6 pb-24">
-        <div className="relative mx-auto flex max-w-[1200px] flex-col items-start gap-6 overflow-hidden rounded-[32px] bg-night px-10 py-16 text-white md:flex-row md:items-center">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(600px_300px_at_90%_50%,rgb(200_242_90/0.2),transparent_60%)]" />
-          <div className="relative flex flex-1 flex-col gap-3"><h2 className="text-[34px] font-semibold tracking-[-1px]">Run tomorrow’s routes on Routa.</h2><p className="text-[16px] text-white/60">We set up your zones, drivers and merchants with you during onboarding.</p></div>
-          <div className="relative flex gap-3"><Link href="/register" className="rounded-2xl bg-lime px-6 py-3.5 font-semibold text-night">Start free trial</Link><Link href="/login" className="rounded-2xl border border-white/15 px-6 py-3.5 font-medium">Sign in</Link></div>
+      {/* ───────────── Pricing ───────────── */}
+      <section id="pricing" className="mx-auto max-w-[1240px] px-5 py-24 sm:px-8">
+        <div className="relative overflow-hidden rounded-[36px] bg-[#0E1325] p-8 text-white sm:p-14">
+          <div className="relative grid gap-12 lg:grid-cols-[1.1fr_1fr] lg:items-center">
+            <div>
+              <h2 className="text-[38px] font-extrabold leading-[1.05] tracking-[-0.035em] sm:text-[52px]">One platform. Priced for your company.</h2>
+              <p className="mt-5 max-w-[34em] text-[18px] leading-[1.6] text-white/70">Routa is licensed per company, sized to your fleet and hubs — not per parcel, not per user. Every module is included, and we set it up with your team.</p>
+              <a href={SALES_HREF} className="mt-9 inline-flex rounded-2xl bg-[#C8F25C] px-7 py-4 text-[17px] font-semibold text-[#0B1030] shadow-[0_10px_40px_-10px_#C8F25C] hover:bg-[#D9F88A]">Talk to sales</a>
+            </div>
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {['AI route planning', 'Driver app for every driver', 'Live map and customer tracking', 'Proof of delivery', 'Cash desk and shop payouts', 'Warehouse and returns', 'Helpdesk', 'Payroll and fleet', 'Shop portal, CSV and API', 'Unlimited office users', 'Setup and training for your team', 'Priority support'].map((it) => (
+                <li key={it} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[.05] px-4 py-3 text-[15px] backdrop-blur">
+                  <svg viewBox="0 0 16 16" className="h-4 w-4 flex-none"><path d="M3 8.5l3 3 7-7" fill="none" stroke="#C8F25C" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>{it}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </section>
 
-      <footer className="border-t border-line">
-        <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-4 px-6 py-10 text-[13px] text-ink-3">
-          <span className="flex items-center gap-3"><Logo dark /><span>The operating system for last-mile delivery. Made in Prishtinë.</span></span>
-          <span>© 2026 Routa · Shqip · English</span>
+      {/* ───────────── FAQ ───────────── */}
+      <section className="mx-auto grid max-w-[1240px] gap-10 px-5 pb-24 sm:px-8 lg:grid-cols-[0.8fr_1.2fr]">
+        <h2 className="text-[38px] font-extrabold leading-[1.05] tracking-[-0.035em] sm:text-[48px]">Questions</h2>
+        <div className="divide-y divide-[#D9DCF5] border-y border-[#D9DCF5]">
+          {FAQ.map(([q, a]) => (
+            <details key={q} className="group py-5">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[18px] font-semibold">
+                {q}<span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-[#EEF0FF] text-[20px] text-[#4A49E3] transition-transform group-open:rotate-45">+</span>
+              </summary>
+              <p className="mt-3 max-w-[42em] text-[16px] leading-[1.65] text-[#3E4659]">{a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      {/* ───────────── Closing ───────────── */}
+      <section className="relative overflow-hidden bg-[#4A49E3] text-white">
+        <div className="relative mx-auto grid max-w-[1240px] items-center gap-10 px-5 py-24 sm:px-8 lg:grid-cols-[1.4fr_1fr]">
+          <div>
+            <h2 className="text-[40px] font-extrabold leading-[1.02] tracking-[-0.04em] sm:text-[60px]">Send us one day of orders. We’ll show you the routes.</h2>
+            <p className="mt-5 max-w-[34em] text-[18px] text-white/80">In a short call we plan your real orders with your drivers, and you see the map, the kilometres and the time each van gets back.</p>
+          </div>
+          <div className="flex flex-wrap gap-3 lg:justify-end">
+            <a href={SALES_HREF} className="rounded-2xl bg-[#C8F25C] px-7 py-4 text-[17px] font-semibold text-[#0B1030] hover:bg-[#D9F88A]">Talk to sales</a>
+            <Link href="/login" className="rounded-2xl border border-white/30 px-7 py-4 text-[17px] font-semibold hover:bg-white/10">Sign in</Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────── Footer ───────────── */}
+      <footer className="bg-[#0E1325] text-white/60">
+        <div className="mx-auto flex max-w-[1240px] flex-wrap items-start gap-10 px-5 py-14 text-[14.5px] sm:px-8">
+          <div className="flex flex-col gap-3">
+            <span className="flex items-center gap-2.5"><LogoMark dark size={30} /><Wordmark color="#fff" dot="#C8F25C" height={23} /></span>
+            <span className="max-w-[24em]">The operating system for delivery companies. Made in Prishtina by <a href="https://vertex-growth.co" className="text-white underline underline-offset-2">Vertex Growth</a>.</span>
+          </div>
+          <form action="/t" className="flex flex-col gap-2">
+            <label htmlFor="track" className="font-semibold text-white">Track a parcel</label>
+            <div className="flex gap-2">
+              <input id="track" name="code" placeholder="Tracking code" className="w-44 rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 uppercase text-white placeholder:text-white/35" />
+              <button className="rounded-xl bg-[#C8F25C] px-4 font-semibold text-[#0B1030]">Track</button>
+            </div>
+          </form>
+          <div className="ml-auto flex flex-col gap-2">
+            <span className="font-semibold text-white">Sign in</span>
+            <Link href="/login" className="hover:text-white">Office and shops</Link>
+            <Link href="/driver-app" className="hover:text-white">Driver app</Link>
+          </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function ProofList() {
+  const rows = [
+    ['KS-20853', 'Liridona Berisha', 'Rruga Agim Ramadani 23', '4 m', 'from-[#C7C9FF] to-[#9DE9F7]'],
+    ['KS-20859', 'Albina Bytyqi', 'Sunny Hill', '12 m', 'from-[#FBCFE8] to-[#C7C9FF]'],
+    ['KS-20864', 'Ardit Selimi', 'Velania, hyrja 4', '31 m', 'from-[#E9FBB5] to-[#9DE9F7]']
+  ];
+  return (
+    <div className="flex flex-col gap-2.5 bg-[#F4F6FF] p-4">
+      {rows.map(([c, n, a, d, g]) => (
+        <div key={c} className="flex items-center gap-3 rounded-xl bg-white p-3 text-[12.5px]">
+          <span className={`flex h-12 w-12 flex-none items-center justify-center rounded-lg bg-gradient-to-br ${g} text-[18px]`}>📦</span>
+          <span className="flex min-w-0 flex-1 flex-col"><span className="font-semibold">{n}</span><span className="truncate text-[#6B7489]">{c}, {a}, {d} from the door</span></span>
+          <svg viewBox="0 0 80 30" className="hidden h-7 w-16 sm:block"><path d="M4 22 C12 4 18 26 26 14 S40 6 46 20 S60 24 76 8" fill="none" stroke="#0B1030" strokeWidth="2" strokeLinecap="round" /></svg>
+          <span className="rounded-full bg-[#E3F6EC] px-2.5 py-1 text-[11.5px] font-semibold text-[#067647]">Verified</span>
+        </div>
+      ))}
     </div>
   );
 }

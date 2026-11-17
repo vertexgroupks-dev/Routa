@@ -1,0 +1,4 @@
+-- 025 reschedule_order: moving an order to another day before it reaches a driver no longer fails.
+-- confirmed/received/packed keep their status (new delivery_date); assigned goes back to received;
+-- failed_attempt/returned_to_hub become rescheduled. The order is removed from any unstarted route.
+-- (Applied via Supabase MCP 2026-11-17; body identical to the live function.)

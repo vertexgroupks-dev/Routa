@@ -41,35 +41,3 @@ export function ScanBox({ placeholder, rpc, argName, extra, button }: { placehol
   );
 }
 
-export function CashCheckIn() {
-  const router = useRouter();
-  const [code, setCode] = useState('');
-  const [h, setH] = useState<any>(null);
-  const [counted, setCounted] = useState('');
-  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const sb = createClient();
-  return (
-    <div className="card flex flex-col gap-4 p-5">
-      <form className="flex flex-wrap gap-3" onSubmit={async (e) => {
-        e.preventDefault(); setMsg(null); setH(null);
-        const { data, error } = await sb.rpc('get_cash_handover', { p_code: code.trim() });
-        if (error) setMsg({ ok: false, text: error.message }); else { setH(data); setCounted(String((data as any)?.expected_amount ?? '')); }
-      }}>
-        <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="Driver’s 6-digit code or QR token" className="input max-w-[320px] font-mono text-lg tracking-[4px]" />
-        <button className="btn-primary">Look up</button>
-      </form>
-      {h && (
-        <div className="flex flex-wrap items-end gap-4 rounded-xl bg-canvas p-4 text-sm">
-          <span className="flex flex-col"><span className="text-xs text-ink-3">Driver</span><span className="font-medium">{h.driver_name ?? h.driver ?? '—'}</span></span>
-          <span className="flex flex-col"><span className="text-xs text-ink-3">Expected</span><span className="font-mono text-lg font-semibold">{euro(h.expected_amount)}</span></span>
-          <label className="label">Counted (€)<input className="input w-40 font-mono" value={counted} onChange={(e) => setCounted(e.target.value)} /></label>
-          <button className="btn-dark" onClick={async () => {
-            const { data, error } = await sb.rpc('confirm_cash_handover', { p_code: code.trim(), p_counted: Number(counted), p_denominations: {}, p_note: null });
-            if (error) setMsg({ ok: false, text: error.message }); else { setMsg({ ok: true, text: `Confirmed · difference ${euro((data as any)?.difference ?? 0)}` }); setH(null); setCode(''); router.refresh(); }
-          }}>Confirm cash</button>
-        </div>
-      )}
-      {msg && <p className={`rounded-[10px] px-3 py-2 text-[13px] ${msg.ok ? 'bg-success-tint text-success-ink' : 'bg-danger-tint text-danger-ink'}`}>{msg.text}</p>}
-    </div>
-  );
-}
