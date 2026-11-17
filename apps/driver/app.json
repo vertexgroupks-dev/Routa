@@ -6,13 +6,24 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
-    "ios": { "bundleIdentifier": "app.routa.driver", "supportsTablet": false },
-    "android": { "package": "app.routa.driver", "edgeToEdgeEnabled": true },
+    "ios": {
+      "bundleIdentifier": "app.routa.driver",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "app.routa.driver"
+    },
     "plugins": [
       "expo-router",
-      ["expo-location", { "locationWhenInUsePermission": "Routa uses your location to confirm deliveries and show your position to the office." }]
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Routa uses your location to confirm deliveries and show your position to the office."
+        }
+      ]
     ],
-    "experiments": { "typedRoutes": false }
+    "experiments": {
+      "typedRoutes": false
+    }
   }
 }
