@@ -32,7 +32,7 @@ const MODULES: { name: string; color: string; text: string; items: string[]; spa
   { name: 'Finance', color: '#5E8F00', text: 'Cash on delivery, payouts, invoices.', items: ['Cash desk with QR', 'Weekly shop payouts', 'Monthly invoices'] },
   { name: 'Helpdesk', color: '#E8590C', text: 'Every failed delivery becomes a task.', items: ['Call-backs', 'Move to another day', 'Proof review'] },
   { name: 'People', color: '#7C3AED', text: 'Drivers, fleet and payroll.', items: ['Salary, per-stop or hourly', 'Licence & service dates'] },
-  { name: 'Shop portal & API', color: '#0F766E', text: 'The shops you deliver for, connected.', items: ['Orders, stock, payouts', 'CSV import', 'API keys & webhooks'], span: 'lg:col-span-2' }
+  { name: 'Shop portal & API', color: '#0F766E', text: 'The shops you deliver for, connected.', items: ['Orders, stock, payouts', 'CSV import', 'API keys & webhooks'] }
 ];
 
 const DAY: [string, string, string][] = [
@@ -88,7 +88,7 @@ export default function Landing() {
         <div aria-hidden className="glow pointer-events-none absolute -right-32 top-24 h-[520px] w-[520px] rounded-full bg-[#38D6F5] opacity-20 blur-[140px]" style={{ animationDelay: '-6s' }} />
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.04)_1px,transparent_1px)] bg-[size:56px_56px] [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_75%)]" />
 
-        <header className="relative mx-auto flex max-w-[1240px] items-center gap-6 px-5 py-5 sm:px-8">
+        <header className="relative mx-auto flex max-w-[1240px] items-center gap-3 px-5 py-5 sm:gap-6 sm:px-8">
           <Logo light dark />
           <nav className="ml-6 hidden gap-7 text-[15px] text-white/70 lg:flex">
             <a href="#ai" className="hover:text-white">AI planning</a>
@@ -97,8 +97,8 @@ export default function Landing() {
             <a href="#pricing" className="hover:text-white">Pricing</a>
           </nav>
           <div className="ml-auto flex items-center gap-2">
-            <Link href="/login" className="rounded-xl px-3.5 py-2 text-[15px] font-medium text-white/85 hover:bg-white/10">Sign in</Link>
-            <a href={SALES_HREF} className="rounded-xl bg-[#C8F25C] px-4 py-2.5 text-[15px] font-semibold text-[#0B1030] hover:bg-[#D9F88A]">Talk to sales</a>
+            <Link href="/login" className="whitespace-nowrap rounded-xl px-2.5 py-2 text-[14px] font-medium text-white/85 hover:bg-white/10 sm:px-3.5 sm:text-[15px]">Sign in</Link>
+            <a href={SALES_HREF} className="whitespace-nowrap rounded-xl bg-[#C8F25C] px-3.5 py-2.5 text-[14px] font-semibold text-[#0B1030] hover:bg-[#D9F88A] sm:px-4 sm:text-[15px]">Talk to sales</a>
           </div>
         </header>
 
@@ -133,7 +133,7 @@ export default function Landing() {
         {/* proof numbers */}
         <div className="relative mx-auto grid max-w-[1240px] gap-8 px-5 pb-20 pt-12 sm:grid-cols-2 sm:px-8 lg:grid-cols-4">
           {[
-            [<CountUp key="a" to={59} suffix="%" />, 'less driving', '155 km down to 63 km for the same 40 addresses'],
+            [<CountUp key="a" to={59} suffix="%" />, 'less driving', '155 km down to 63 km on a 40-address test day'],
             [<CountUp key="b" to={2.7} decimals={1} suffix="×" />, 'sooner back at the hub', '4 vans finish in about 40 minutes instead of one van in 1 h 48'],
             [<span key="c">1 click</span>, 'from orders to routes', 'addresses placed, vans filled, stops ordered'],
             [<CountUp key="d" to={6} />, 'teams in one system', 'dispatch, warehouse, drivers, helpdesk, finance, HR']
@@ -323,7 +323,7 @@ export default function Landing() {
 
 function ProofList() {
   const rows = [
-    ['KS-20853', 'Liridona Berisha', 'Rruga Agim Ramadani 23', '0 m', 'from-[#C7C9FF] to-[#9DE9F7]'],
+    ['KS-20853', 'Liridona Berisha', 'Rruga Agim Ramadani 23', '4 m', 'from-[#C7C9FF] to-[#9DE9F7]'],
     ['KS-20859', 'Albina Bytyqi', 'Sunny Hill', '12 m', 'from-[#FBCFE8] to-[#C7C9FF]'],
     ['KS-20864', 'Ardit Selimi', 'Velania, hyrja 4', '31 m', 'from-[#E9FBB5] to-[#9DE9F7]']
   ];

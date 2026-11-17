@@ -107,7 +107,7 @@ export function PlanCompare() {
       </div>
       <div className="flex flex-col gap-5 text-white">
         <div>
-          <span className="text-[15px] text-white/60">Same 15 orders, same morning</span>
+          <span className="text-[15px] text-white/60">The 15 stops from the map above</span>
           <div className="mt-1 flex items-baseline gap-3">
             <span className={`text-[64px] font-extrabold leading-none tracking-[-0.04em] transition-colors ${planned ? 'text-[#C8F25C]' : 'text-[#F87171]'}`}>{value.toFixed(1)}</span>
             <span className="text-[22px] font-semibold text-white/70">km</span>
